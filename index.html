@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenShift AI Integration | llm-d</title>
+<link rel="icon" type="image/png" href="https://llm-d.ai/img/llm-d-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@700;900&family=Red+Hat+Text:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-body: #0a0a0f;
+  --bg-card: #12121a;
+  --bg-header: #0d0d14;
+  --border-card: #1e1e32;
+  --text-primary: #e8e8f0;
+  --text-secondary: #9898b0;
+  --text-muted: #6a6a80;
+  --blue: #3b82f6;
+  --green: #00e676;
+  --amber: #ffab00;
+  --red: #ff1744;
+  --purple: #7c4dff;
+  --radius: 12px;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Red Hat Text', sans-serif;
+  font-weight: 400;
+  background: var(--bg-body);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Red Hat Display', sans-serif;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+a { color: var(--blue); text-decoration: none; transition: color var(--transition); }
+a:hover { color: #60a5fa; }
+
+/* ── Header ── */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(13, 13, 20, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-card);
+  padding: 0 24px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-left img {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+}
+
+.header-left .logo-text {
+  font-family: 'Red Hat Display', sans-serif;
+  font-weight: 900;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+.header-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border-card);
+}
+
+.header-left .subtitle {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.header-right a {
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: color var(--transition);
+}
+
+.header-right a:hover {
+  color: var(--text-primary);
+}
+
+/* ── Main content ── */
+.main-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+.section {
+  margin-bottom: 80px;
+}
+
+.section-title {
+  font-size: 1.75rem;
+  font-weight: 900;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
+.section-subtitle {
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+  font-size: 1rem;
+}
+
+/* ── Hero ── */
+.hero {
+  text-align: center;
+  margin-bottom: 64px;
+}
+
+.hero h1 {
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-weight: 900;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--blue), var(--purple));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero p {
+  font-size: 1.15rem;
+  color: var(--text-secondary);
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* ── Architecture Layers ── */
+.arch-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.arch-layer {
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all var(--transition);
+  overflow: hidden;
+  border: 1px solid var(--border-card);
+}
+
+.arch-layer:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.1);
+}
+
+.arch-layer.expanded {
+  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.15);
+}
+
+.layer-bar {
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  gap: 16px;
+  user-select: none;
+}
+
+.layer-icon {
+  font-size: 1.5rem;
+  width: 40px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.layer-number {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  width: 20px;
+  flex-shrink: 0;
+}
+
+.layer-info { flex: 1; }
+
+.layer-name {
+  font-family: 'Red Hat Display', sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+}
+
+.layer-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.layer-chevron {
+  width: 20px;
+  height: 20px;
+  transition: transform var(--transition);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.arch-layer.expanded .layer-chevron {
+  transform: rotate(180deg);
+}
+
+.layer-detail {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.arch-layer.expanded .layer-detail {
+  max-height: 600px;
+}
+
+.layer-detail-inner {
+  padding: 0 24px 24px;
+  border-top: 1px solid var(--border-card);
+  margin-top: 0;
+  padding-top: 20px;
+}
+
+.layer-detail-inner p {
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.layer-detail-inner h4 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  margin-top: 16px;
+}
+
+.code-block {
+  background: #0d0d14;
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  padding: 16px;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  overflow-x: auto;
+  white-space: pre;
+  margin-bottom: 12px;
+}
+
+.code-block .key { color: var(--blue); }
+.code-block .val { color: var(--green); }
+.code-block .comment { color: var(--text-muted); }
+
+.connection-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+.connection-up {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--blue);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.connection-down {
+  background: rgba(124, 77, 255, 0.1);
+  color: var(--purple);
+  border: 1px solid rgba(124, 77, 255, 0.2);
+}
+
+/* ── Request Flow ── */
+.flow-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+  padding: 40px 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.flow-path {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  padding: 20px 0;
+  overflow-x: auto;
+  gap: 0;
+}
+
+.flow-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.flow-node-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  border: 2px solid var(--border-card);
+  background: var(--bg-body);
+  transition: all var(--transition);
+  position: relative;
+}
+
+.flow-node-circle.active {
+  border-color: var(--blue);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+}
+
+.flow-node-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  max-width: 90px;
+}
+
+.flow-node-sublabel {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  max-width: 100px;
+  margin-top: 4px;
+}
+
+.flow-connector {
+  flex: 1;
+  height: 2px;
+  background: var(--border-card);
+  position: relative;
+  min-width: 30px;
+  margin: 0 -4px;
+  align-self: flex-start;
+  margin-top: 34px;
+}
+
+.flow-connector::after {
+  content: '';
+  position: absolute;
+  right: -4px;
+  top: -4px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid var(--border-card);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+}
+
+.flow-glow {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: var(--blue);
+  border-radius: 50%;
+  box-shadow: 0 0 20px var(--blue), 0 0 40px rgba(59, 130, 246, 0.3);
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: none;
+}
+
+.flow-controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.btn {
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-family: 'Red Hat Text', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.btn-primary {
+  background: var(--blue);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-card);
+}
+
+.btn-secondary:hover {
+  border-color: var(--text-muted);
+  color: var(--text-primary);
+}
+
+.epp-branch {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.epp-branch-card {
+  background: var(--bg-body);
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  padding: 16px 20px;
+  text-align: center;
+  min-width: 160px;
+  transition: all var(--transition);
+}
+
+.epp-branch-card.highlight {
+  border-color: var(--blue);
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.15);
+}
+
+.epp-branch-card h4 {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.epp-branch-card p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ── Config Panel ── */
+.config-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+@media (max-width: 768px) {
+  .config-panel { grid-template-columns: 1fr; }
+}
+
+.config-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.toggle-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.toggle-card:hover {
+  border-color: var(--text-muted);
+}
+
+.toggle-card.active {
+  border-color: var(--blue);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.toggle-info h4 {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.toggle-info p {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.toggle-switch {
+  width: 48px;
+  height: 26px;
+  background: var(--border-card);
+  border-radius: 13px;
+  position: relative;
+  transition: background var(--transition);
+  flex-shrink: 0;
+}
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: var(--text-secondary);
+  border-radius: 50%;
+  top: 3px;
+  left: 3px;
+  transition: all var(--transition);
+}
+
+.toggle-card.active .toggle-switch {
+  background: var(--blue);
+}
+
+.toggle-card.active .toggle-switch::after {
+  transform: translateX(22px);
+  background: #fff;
+}
+
+.config-diagram {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+  padding: 32px;
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.mini-arch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.mini-component {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+  border: 1px solid var(--border-card);
+  background: var(--bg-body);
+  color: var(--text-secondary);
+  transition: all var(--transition);
+  width: 100%;
+  max-width: 280px;
+}
+
+.mini-component.active {
+  border-color: var(--blue);
+  color: var(--text-primary);
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.mini-arrow {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.mini-pods-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
+  max-width: 360px;
+  transition: all var(--transition);
+}
+
+.mini-pod {
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid var(--border-card);
+  background: var(--bg-body);
+  color: var(--text-muted);
+  transition: all var(--transition);
+  text-align: center;
+}
+
+.mini-pod.prefill {
+  border-color: rgba(124, 77, 255, 0.4);
+  color: var(--purple);
+  background: rgba(124, 77, 255, 0.06);
+}
+
+.mini-pod.decode {
+  border-color: rgba(0, 230, 118, 0.4);
+  color: var(--green);
+  background: rgba(0, 230, 118, 0.06);
+}
+
+.mini-pod.lora-tag {
+  font-size: 0.65rem;
+  padding: 3px 8px;
+  border-color: rgba(255, 171, 0, 0.4);
+  color: var(--amber);
+  background: rgba(255, 171, 0, 0.06);
+}
+
+.mini-hpa {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px dashed rgba(0, 230, 118, 0.4);
+  color: var(--green);
+  background: rgba(0, 230, 118, 0.04);
+  transition: all var(--transition);
+}
+
+.mini-cache {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px dashed rgba(59, 130, 246, 0.4);
+  color: var(--blue);
+  background: rgba(59, 130, 246, 0.04);
+  transition: all var(--transition);
+}
+
+.config-hidden {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  transform: scale(0.95);
+  transition: all var(--transition);
+}
+
+.config-visible {
+  opacity: 1;
+  max-height: 80px;
+  transform: scale(1);
+}
+
+/* ── Timeline ── */
+.timeline {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  position: relative;
+  padding: 40px 0;
+  gap: 0;
+  overflow-x: auto;
+}
+
+.timeline-line {
+  position: absolute;
+  top: 60px;
+  left: 15%;
+  right: 15%;
+  height: 2px;
+  background: var(--border-card);
+}
+
+@media (max-width: 768px) {
+  .timeline-line { left: 5%; right: 5%; }
+}
+
+.timeline-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  min-width: 140px;
+  max-width: 260px;
+}
+
+.timeline-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--bg-body);
+  border: 3px solid var(--border-card);
+  margin-bottom: 16px;
+  transition: all var(--transition);
+}
+
+.timeline-node.active .timeline-dot {
+  border-color: var(--blue);
+  background: var(--blue);
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.5);
+}
+
+.timeline-version {
+  font-family: 'Red Hat Display', sans-serif;
+  font-weight: 900;
+  font-size: 1.15rem;
+  color: var(--text-muted);
+  transition: color var(--transition);
+}
+
+.timeline-node.active .timeline-version {
+  color: var(--text-primary);
+}
+
+.timeline-year {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.timeline-summary {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-align: center;
+  max-width: 180px;
+  margin-bottom: 12px;
+}
+
+.timeline-detail {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+}
+
+.timeline-node.active .timeline-detail {
+  max-height: 300px;
+}
+
+.timeline-detail-inner {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 8px;
+}
+
+.timeline-detail-inner ul {
+  list-style: none;
+  padding: 0;
+}
+
+.timeline-detail-inner li {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  padding: 4px 0;
+  padding-left: 16px;
+  position: relative;
+}
+
+.timeline-detail-inner li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 11px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--blue);
+}
+
+/* ── Hardware Matrix ── */
+.hw-matrix {
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-card);
+}
+
+.hw-matrix table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 700px;
+}
+
+.hw-matrix th, .hw-matrix td {
+  padding: 14px 16px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-card);
+  font-size: 0.85rem;
+}
+
+.hw-matrix th {
+  background: var(--bg-card);
+  font-family: 'Red Hat Display', sans-serif;
+  font-weight: 700;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  position: sticky;
+  top: 0;
+}
+
+.hw-matrix td:first-child {
+  text-align: left;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.hw-matrix tr:hover {
+  background: rgba(59, 130, 246, 0.03);
+}
+
+.hw-matrix tr:last-child td { border-bottom: none; }
+
+.hw-check { color: var(--green); font-weight: 700; font-size: 1.1rem; }
+.hw-partial { color: var(--amber); font-weight: 700; font-size: 0.9rem; }
+.hw-no { color: var(--red); font-weight: 700; font-size: 1rem; }
+
+.badge-new {
+  display: inline-block;
+  background: var(--green);
+  color: #000;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+  text-transform: uppercase;
+}
+
+/* ── Topology ── */
+.topo-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .topo-cards { grid-template-columns: 1fr; }
+}
+
+.topo-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  cursor: pointer;
+  transition: all var(--transition);
+  overflow: hidden;
+}
+
+.topo-card:hover {
+  border-color: var(--text-muted);
+  transform: translateY(-2px);
+}
+
+.topo-card.active {
+  border-color: var(--blue);
+  box-shadow: 0 4px 24px rgba(59, 130, 246, 0.12);
+}
+
+.topo-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.topo-icon {
+  font-size: 1.5rem;
+}
+
+.topo-header h3 {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.topo-card p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.topo-specs {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.topo-detail {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.topo-card.active .topo-detail {
+  max-height: 500px;
+}
+
+.topo-detail-inner {
+  padding-top: 20px;
+  margin-top: 20px;
+  border-top: 1px solid var(--border-card);
+}
+
+.topo-detail-inner h4 {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  margin-top: 12px;
+}
+
+.topo-detail-inner h4:first-child { margin-top: 0; }
+
+.topo-detail-inner p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.topo-detail-inner ul {
+  list-style: none;
+  padding: 0;
+}
+
+.topo-detail-inner li {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  padding: 3px 0 3px 16px;
+  position: relative;
+}
+
+.topo-detail-inner li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--blue);
+}
+
+.topo-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.topo-box {
+  border: 1px solid var(--border-card);
+  border-radius: 8px;
+  padding: 12px 16px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.topo-box .box-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.topo-box .box-icon {
+  font-size: 1.2rem;
+  margin-bottom: 4px;
+}
+
+.topo-connector-h {
+  color: var(--text-muted);
+  font-size: 1.2rem;
+}
+
+.topo-box-cluster {
+  border: 2px dashed var(--border-card);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.topo-box-cluster .cluster-label {
+  width: 100%;
+  text-align: center;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.topo-box-sm {
+  border: 1px solid var(--border-card);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+/* ── Footer ── */
+.site-footer {
+  border-top: 1px solid var(--border-card);
+  padding: 40px 24px;
+  text-align: center;
+}
+
+.footer-hub {
+  font-family: 'Red Hat Display', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-links a {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.footer-links a:hover {
+  color: var(--text-primary);
+}
+
+.footer-content-number {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .site-header { padding: 0 16px; }
+  .header-left .subtitle { display: none; }
+  .header-divider { display: none; }
+  .main-content { padding: 32px 16px 60px; }
+  .section { margin-bottom: 56px; }
+  .section-title { font-size: 1.4rem; }
+  .layer-bar { padding: 12px 16px; }
+  .flow-path { padding: 20px 10px; }
+  .timeline { flex-direction: column; align-items: stretch; }
+  .timeline-line { display: none; }
+  .timeline-node { flex-direction: row; flex-wrap: wrap; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--border-card); }
+  .timeline-dot { margin-bottom: 0; }
+  .timeline-summary { text-align: left; }
+  .timeline-detail { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════ Header ══════════ -->
+<header class="site-header">
+  <div class="header-left">
+    <img src="https://llm-d.ai/img/llm-d-icon.png" alt="llm-d">
+    <span class="logo-text">llm-d</span>
+    <div class="header-divider"></div>
+    <span class="subtitle">OpenShift AI Integration</span>
+  </div>
+  <nav class="header-right">
+    <a href="blog/">Blog</a>
+    <a href="https://llm-d.ai">llm-d.ai</a>
+  </nav>
+</header>
+
+<!-- ══════════ Main ══════════ -->
+<main class="main-content">
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>OpenShift AI Integration</h1>
+    <p>Explore the full architecture of llm-d running on Red Hat OpenShift AI. Click any layer to dive in, watch requests flow through the stack, and configure features interactively.</p>
+  </section>
+
+  <!-- ──── Section 1: Architecture Stack ──── -->
+  <section class="section" id="architecture">
+    <h2 class="section-title">Layered Architecture</h2>
+    <p class="section-subtitle">Click any layer to explore its role in the inference stack</p>
+
+    <div class="arch-stack" id="archStack"></div>
+  </section>
+
+  <!-- ──── Section 2: Request Flow ──── -->
+  <section class="section" id="request-flow">
+    <h2 class="section-title">Request Flow Visualization</h2>
+    <p class="section-subtitle">Watch an inference request travel through the stack in real time</p>
+
+    <div class="flow-container">
+      <div class="flow-path" id="flowPath">
+        <div class="flow-glow" id="flowGlow"></div>
+      </div>
+
+      <div class="epp-branch" id="eppBranch">
+        <div class="epp-branch-card" id="epp-kv">
+          <h4>KV-Cache Affinity</h4>
+          <p>Route to pod with cached prefix</p>
+        </div>
+        <div class="epp-branch-card" id="epp-lora">
+          <h4>LoRA Adapter</h4>
+          <p>Route to pod with loaded adapter</p>
+        </div>
+        <div class="epp-branch-card" id="epp-lb">
+          <h4>Load Balancing</h4>
+          <p>Route to least-loaded pod</p>
+        </div>
+      </div>
+
+      <div class="flow-controls">
+        <button class="btn btn-primary" id="btnReplay">Replay Animation</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ──── Section 3: Configuration Panel ──── -->
+  <section class="section" id="configuration">
+    <h2 class="section-title">Interactive Configuration</h2>
+    <p class="section-subtitle">Toggle features to see how the architecture changes</p>
+
+    <div class="config-panel">
+      <div class="config-toggles" id="configToggles"></div>
+      <div class="config-diagram" id="configDiagram"></div>
+    </div>
+  </section>
+
+  <!-- ──── Section 4: Version Timeline ──── -->
+  <section class="section" id="timeline">
+    <h2 class="section-title">Release Timeline</h2>
+    <p class="section-subtitle">Red Hat AI release progression with llm-d integration milestones</p>
+
+    <div class="timeline" id="timeline">
+      <div class="timeline-line"></div>
+    </div>
+  </section>
+
+  <!-- ──── Section 5: Hardware Compatibility ──── -->
+  <section class="section" id="hardware">
+    <h2 class="section-title">Hardware Compatibility Matrix</h2>
+    <p class="section-subtitle">GPU support for llm-d features on OpenShift AI</p>
+
+    <div class="hw-matrix" id="hwMatrix"></div>
+  </section>
+
+  <!-- ──── Section 6: Deployment Topology ──── -->
+  <section class="section" id="topology">
+    <h2 class="section-title">Deployment Topology</h2>
+    <p class="section-subtitle">Choose the right deployment model for your workload</p>
+
+    <div class="topo-cards" id="topoCards"></div>
+  </section>
+
+</main>
+
+<!-- ══════════ Footer ══════════ -->
+<footer class="site-footer">
+  <p class="footer-hub">Part of the llm-d Content Hub</p>
+  <div class="footer-links">
+    <a href="https://llm-d.ai">llm-d.ai</a>
+    <a href="https://github.com/llm-d">GitHub</a>
+    <a href="blog/">Blog</a>
+  </div>
+  <p class="footer-content-number">Content 10 of 15</p>
+</footer>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   Section 1 — Layered Architecture
+   ═══════════════════════════════════════════════════ */
+const layers = [
+  {
+    num: 7,
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+    name: 'User / Application',
+    subtitle: 'Sends inference requests',
+    color: 'linear-gradient(135deg, #3b82f6 0%, #4f8ff7 100%)',
+    description: 'Applications and users submit inference requests to the OpenShift AI serving endpoint. Requests can be standard OpenAI-compatible chat completions, embeddings, or custom model endpoints. Client SDKs, curl, or any HTTP client can target the exposed Route.',
+    config: '<span class="key">POST</span> /v1/chat/completions\n<span class="key">Authorization</span>: Bearer &lt;token&gt;\n<span class="key">Content-Type</span>: application/json\n{\n  <span class="key">"model"</span>: <span class="val">"meta-llama/Llama-3.1-70B-Instruct"</span>,\n  <span class="key">"messages"</span>: [{<span class="key">"role"</span>: <span class="val">"user"</span>, <span class="key">"content"</span>: <span class="val">"Hello"</span>}],\n  <span class="key">"stream"</span>: <span class="val">true</span>\n}',
+    connectUp: null,
+    connectDown: 'Sends HTTPS requests to OpenShift Route'
+  },
+  {
+    num: 6,
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>',
+    name: 'OpenShift Route / Ingress',
+    subtitle: 'Traffic entry point',
+    color: 'linear-gradient(135deg, #4570e6 0%, #5a4fd6 100%)',
+    description: 'OpenShift Routes expose the inference endpoint externally with TLS termination. The Gateway API (Envoy-based) handles traffic management, load balancing, and routing rules. Supports HTTP/2 and gRPC for streaming inference responses.',
+    config: '<span class="key">apiVersion</span>: route.openshift.io/v1\n<span class="key">kind</span>: Route\n<span class="key">metadata</span>:\n  <span class="key">name</span>: <span class="val">llm-inference-gateway</span>\n<span class="key">spec</span>:\n  <span class="key">tls</span>:\n    <span class="key">termination</span>: <span class="val">edge</span>\n  <span class="key">to</span>:\n    <span class="key">kind</span>: <span class="val">Service</span>\n    <span class="key">name</span>: <span class="val">llm-gateway-svc</span>',
+    connectUp: 'Receives external HTTPS traffic from clients',
+    connectDown: 'Forwards requests to Red Hat AI Operator managed services'
+  },
+  {
+    num: 5,
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+    name: 'Red Hat AI Operator',
+    subtitle: 'Manages the inference stack',
+    color: 'linear-gradient(135deg, #4e5ed6 0%, #6550c8 100%)',
+    description: 'The Red Hat AI Operator (part of Red Hat OpenShift AI) automates the deployment and lifecycle management of the entire inference stack. It reconciles LLMInferenceService custom resources and provisions the Gateway, EPP, and vLLM pods with the correct configuration.',
+    config: '<span class="comment"># Operator watches for LLMInferenceService CRDs</span>\n<span class="comment"># and automatically provisions:</span>\n<span class="comment">#   - Gateway API resources</span>\n<span class="comment">#   - EPP deployment</span>\n<span class="comment">#   - vLLM StatefulSets</span>\n<span class="comment">#   - HPA policies</span>\n<span class="comment">#   - PersistentVolumeClaims for model storage</span>',
+    connectUp: 'Configures Route and Gateway API resources',
+    connectDown: 'Creates and manages KServe + LLMInferenceService resources'
+  },
+  {
+    num: 4,
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+    name: 'KServe + LLMInferenceService CRD',
+    subtitle: 'Model serving orchestration',
+    color: 'linear-gradient(135deg, #5a4cc6 0%, #6d42b8 100%)',
+    description: 'LLMInferenceService is a Kubernetes Custom Resource Definition purpose-built for LLM inference. It extends KServe with LLM-specific fields like model parallelism, disaggregated serving modes, and LoRA adapter configuration. A single CRD declaratively defines the entire serving topology.',
+    config: '<span class="key">apiVersion</span>: inference.llm-d.ai/v1alpha1\n<span class="key">kind</span>: LLMInferenceService\n<span class="key">metadata</span>:\n  <span class="key">name</span>: <span class="val">llama-70b</span>\n<span class="key">spec</span>:\n  <span class="key">modelName</span>: <span class="val">meta-llama/Llama-3.1-70B-Instruct</span>\n  <span class="key">tensorParallelism</span>: <span class="val">4</span>\n  <span class="key">disaggregatedServing</span>:\n    <span class="key">enabled</span>: <span class="val">true</span>\n    <span class="key">prefillReplicas</span>: <span class="val">2</span>\n    <span class="key">decodeReplicas</span>: <span class="val">4</span>',
+    connectUp: 'Managed by the Red Hat AI Operator',
+    connectDown: 'Defines EPP routing policy and vLLM pod topology'
+  },
+  {
+    num: 3,
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 12l-4-4-4 4"/><path d="M12 16V8"/></svg>',
+    name: 'Endpoint Picker (EPP)',
+    subtitle: "llm-d's intelligent request routing",
+    color: 'linear-gradient(135deg, #6840b6 0%, #7a38a8 100%)',
+    description: 'The Endpoint Picker is the brain of llm-d. It receives incoming requests and makes intelligent routing decisions based on real-time pod metrics: KV-cache occupancy, loaded LoRA adapters, prefix cache hits, and queue depth. EPP runs as a sidecar to the Gateway and communicates over gRPC.',
+    config: '<span class="comment"># EPP routing strategies:</span>\n<span class="key">routing</span>:\n  <span class="key">strategy</span>: <span class="val">prefix-aware</span>     <span class="comment"># or: load-balanced, lora-affinity</span>\n  <span class="key">kvCacheThreshold</span>: <span class="val">0.85</span>     <span class="comment"># shed load above 85% KV-cache</span>\n  <span class="key">prefixMatchWeight</span>: <span class="val">0.6</span>     <span class="comment"># weight for prefix cache hit</span>\n  <span class="key">queueDepthWeight</span>: <span class="val">0.3</span>      <span class="comment"># weight for queue depth</span>\n  <span class="key">loraAffinityWeight</span>: <span class="val">0.1</span>    <span class="comment"># weight for LoRA adapter match</span>',
+    connectUp: 'Receives requests from Gateway API',
+    connectDown: 'Routes to optimal vLLM pod based on metrics'
+  },
+  {
+    num: 2,
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="2" x2="9" y2="4"/><line x1="15" y1="2" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="22"/><line x1="15" y1="20" x2="15" y2="22"/><line x1="20" y1="9" x2="22" y2="9"/><line x1="20" y1="15" x2="22" y2="15"/><line x1="2" y1="9" x2="4" y2="9"/><line x1="2" y1="15" x2="4" y2="15"/></svg>',
+    name: 'vLLM Inference Pods',
+    subtitle: 'The model serving engine',
+    color: 'linear-gradient(135deg, #7a36a4 0%, #8a2e98 100%)',
+    description: 'vLLM pods run the actual model inference with PagedAttention, continuous batching, and speculative decoding. In disaggregated mode, separate prefill and decode pods handle different phases of generation. Each pod reports real-time metrics to EPP via a sidecar.',
+    config: '<span class="key">containers</span>:\n  - <span class="key">name</span>: <span class="val">vllm</span>\n    <span class="key">image</span>: <span class="val">quay.io/redhat-ai/vllm:latest</span>\n    <span class="key">args</span>:\n      - <span class="val">--model=meta-llama/Llama-3.1-70B-Instruct</span>\n      - <span class="val">--tensor-parallel-size=4</span>\n      - <span class="val">--enable-prefix-caching</span>\n      - <span class="val">--max-model-len=32768</span>\n      - <span class="val">--gpu-memory-utilization=0.92</span>\n    <span class="key">resources</span>:\n      <span class="key">limits</span>:\n        <span class="key">nvidia.com/gpu</span>: <span class="val">4</span>',
+    connectUp: 'Receives routed requests from EPP',
+    connectDown: 'Executes model inference on GPU hardware'
+  },
+  {
+    num: 1,
+    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="22" height="12" rx="2"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="10" y1="10" x2="10" y2="14"/><line x1="14" y1="10" x2="14" y2="14"/><line x1="18" y1="10" x2="18" y2="14"/></svg>',
+    name: 'GPU Hardware',
+    subtitle: 'NVIDIA H100 / H200 / B200, AMD MI300X',
+    color: 'linear-gradient(135deg, #8a2c96 0%, #7c4dff 100%)',
+    description: 'The compute foundation. NVIDIA H100 SXM GPUs with NVLink for high-bandwidth tensor parallelism, H200 with extended HBM3e memory for larger context windows, B200 (Blackwell) for next-gen performance, and AMD MI300X for ROCm-based deployments. GPU topology and interconnect matter for disaggregated serving.',
+    config: '<span class="comment"># Typical GPU node configuration:</span>\n<span class="key">node</span>:\n  <span class="key">gpu</span>: <span class="val">NVIDIA H100 SXM 80GB</span>\n  <span class="key">count</span>: <span class="val">8</span>\n  <span class="key">interconnect</span>: <span class="val">NVLink 4.0 (900 GB/s)</span>\n  <span class="key">memory</span>: <span class="val">640 GB HBM3</span>\n  <span class="key">cpu</span>: <span class="val">2x Intel Xeon 8480+</span>\n  <span class="key">system_ram</span>: <span class="val">2 TB DDR5</span>',
+    connectUp: 'Provides compute for vLLM model execution',
+    connectDown: null
+  }
+];
+
+function renderArchStack() {
+  const container = document.getElementById('archStack');
+  container.innerHTML = layers.map(l => `
+    <div class="arch-layer" data-layer="${l.num}" style="background: ${l.color}" onclick="toggleLayer(this)">
+      <div class="layer-bar">
+        <span class="layer-number">L${l.num}</span>
+        <span class="layer-icon">${l.icon}</span>
+        <div class="layer-info">
+          <div class="layer-name">${l.name}</div>
+          <div class="layer-subtitle">${l.subtitle}</div>
+        </div>
+        <svg class="layer-chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"/></svg>
+      </div>
+      <div class="layer-detail">
+        <div class="layer-detail-inner">
+          <p>${l.description}</p>
+          <h4>Configuration</h4>
+          <div class="code-block">${l.config}</div>
+          <h4>Connections</h4>
+          <div>
+            ${l.connectUp ? `<span class="connection-label connection-up">&#8593; Above: ${l.connectUp}</span>` : ''}
+            ${l.connectDown ? `<span class="connection-label connection-down">&#8595; Below: ${l.connectDown}</span>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleLayer(el) {
+  const wasExpanded = el.classList.contains('expanded');
+  document.querySelectorAll('.arch-layer').forEach(l => l.classList.remove('expanded'));
+  if (!wasExpanded) el.classList.add('expanded');
+}
+
+renderArchStack();
+
+
+/* ═══════════════════════════════════════════════════
+   Section 2 — Request Flow Visualization
+   ═══════════════════════════════════════════════════ */
+const flowSteps = [
+  { icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', label: 'User', sub: 'Send request' },
+  { icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>', label: 'OCP Route', sub: 'TLS termination' },
+  { icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 3v18"/></svg>', label: 'Gateway API', sub: 'Traffic mgmt' },
+  { icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 12l-4-4-4 4"/><path d="M12 16V8"/></svg>', label: 'EPP', sub: 'Routing decision' },
+  { icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>', label: 'vLLM Pod', sub: 'Model inference' },
+  { icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="6" width="22" height="12" rx="2"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="10" y1="10" x2="10" y2="14"/><line x1="14" y1="10" x2="14" y2="14"/><line x1="18" y1="10" x2="18" y2="14"/></svg>', label: 'GPU', sub: 'Compute' },
+  { icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>', label: 'Response', sub: 'Stream back' }
+];
+
+function renderFlowPath() {
+  const container = document.getElementById('flowPath');
+  const glow = document.getElementById('flowGlow');
+  let html = '';
+  flowSteps.forEach((step, i) => {
+    html += `<div class="flow-node" id="flowNode${i}">
+      <div class="flow-node-circle">${step.icon}</div>
+      <span class="flow-node-label">${step.label}</span>
+      <span class="flow-node-sublabel">${step.sub}</span>
+    </div>`;
+    if (i < flowSteps.length - 1) {
+      html += `<div class="flow-connector"></div>`;
+    }
+  });
+  glow.remove();
+  container.innerHTML = html;
+  container.appendChild(glow);
+}
+
+let flowAnimating = false;
+let flowAnimId = null;
+
+function animateFlow() {
+  if (flowAnimating) return;
+  flowAnimating = true;
+
+  const glow = document.getElementById('flowGlow');
+  const nodes = document.querySelectorAll('.flow-node-circle');
+  const branches = document.querySelectorAll('.epp-branch-card');
+
+  nodes.forEach(n => n.classList.remove('active'));
+  branches.forEach(b => b.classList.remove('highlight'));
+  glow.style.opacity = '1';
+
+  const nodeEls = document.querySelectorAll('#flowPath .flow-node');
+  const connEls = document.querySelectorAll('#flowPath .flow-connector');
+  const container = document.getElementById('flowPath');
+
+  let step = 0;
+  const totalSteps = flowSteps.length;
+
+  function animateStep() {
+    if (step >= totalSteps) {
+      glow.style.opacity = '0';
+      flowAnimating = false;
+      return;
+    }
+
+    const nodeEl = nodeEls[step];
+    const circle = nodeEl.querySelector('.flow-node-circle');
+    const rect = circle.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    const targetX = rect.left - containerRect.left + rect.width / 2 - 6;
+    const targetY = rect.top - containerRect.top + rect.height / 2 - 6;
+
+    glow.style.transform = `translate(${targetX}px, ${targetY}px)`;
+    circle.classList.add('active');
+
+    if (step === 3) {
+      const branchIdx = Math.floor(Math.random() * 3);
+      branches[branchIdx].classList.add('highlight');
+    }
+
+    step++;
+    flowAnimId = setTimeout(animateStep, 600);
+  }
+
+  animateStep();
+}
+
+renderFlowPath();
+
+document.getElementById('btnReplay').addEventListener('click', function() {
+  if (flowAnimId) clearTimeout(flowAnimId);
+  flowAnimating = false;
+  const glow = document.getElementById('flowGlow');
+  glow.style.opacity = '0';
+  glow.style.transform = 'translate(0, 0)';
+  document.querySelectorAll('.flow-node-circle').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.epp-branch-card').forEach(b => b.classList.remove('highlight'));
+  setTimeout(animateFlow, 100);
+});
+
+setTimeout(animateFlow, 1200);
+
+
+/* ═══════════════════════════════════════════════════
+   Section 3 — Configuration Panel
+   ═══════════════════════════════════════════════════ */
+const configFeatures = [
+  { id: 'disagg', label: 'Disaggregated Prefill/Decode', desc: 'Separate prefill and decode pods for optimized throughput' },
+  { id: 'hpa', label: 'Autoscaling (HPA)', desc: 'Horizontal Pod Autoscaler monitors GPU utilization' },
+  { id: 'lora', label: 'LoRA Multi-Adapter', desc: 'Multiple LoRA adapters loaded per pod with routing' },
+  { id: 'prefix', label: 'Prefix Caching', desc: 'Share KV-cache across requests with common prefixes' }
+];
+
+const configState = { disagg: false, hpa: false, lora: false, prefix: false };
+
+function renderConfigToggles() {
+  const container = document.getElementById('configToggles');
+  container.innerHTML = configFeatures.map(f => `
+    <div class="toggle-card${configState[f.id] ? ' active' : ''}" data-feature="${f.id}" onclick="toggleConfig('${f.id}')">
+      <div class="toggle-info">
+        <h4>${f.label}</h4>
+        <p>${f.desc}</p>
+      </div>
+      <div class="toggle-switch"></div>
+    </div>
+  `).join('');
+}
+
+function toggleConfig(id) {
+  configState[id] = !configState[id];
+  renderConfigToggles();
+  renderConfigDiagram();
+}
+
+function renderConfigDiagram() {
+  const d = document.getElementById('configDiagram');
+  const s = configState;
+
+  const podsHTML = s.disagg
+    ? `<div class="mini-pods-row">
+        <div class="mini-pod prefill">Prefill Pod 1</div>
+        <div class="mini-pod prefill">Prefill Pod 2</div>
+        <div class="mini-pod decode">Decode Pod 1</div>
+        <div class="mini-pod decode">Decode Pod 2</div>
+        <div class="mini-pod decode">Decode Pod 3</div>
+        <div class="mini-pod decode">Decode Pod 4</div>
+       </div>`
+    : `<div class="mini-pods-row">
+        <div class="mini-pod">vLLM Pod 1</div>
+        <div class="mini-pod">vLLM Pod 2</div>
+        <div class="mini-pod">vLLM Pod 3</div>
+        <div class="mini-pod">vLLM Pod 4</div>
+       </div>`;
+
+  const hpaHTML = s.hpa
+    ? `<div class="mini-hpa config-visible">
+        <span>&#8645;</span> HPA Controller &mdash; scaling pods based on GPU utilization
+       </div>`
+    : `<div class="mini-hpa config-hidden">
+        <span>&#8645;</span> HPA Controller
+       </div>`;
+
+  const loraHTML = s.lora
+    ? `<div class="mini-pods-row config-visible" style="margin-top:4px">
+        <div class="mini-pod lora-tag">adapter: sql-expert</div>
+        <div class="mini-pod lora-tag">adapter: code-gen</div>
+        <div class="mini-pod lora-tag">adapter: summarize</div>
+       </div>`
+    : `<div class="mini-pods-row config-hidden" style="margin-top:4px">
+        <div class="mini-pod lora-tag">adapter: sql-expert</div>
+       </div>`;
+
+  const cacheHTML = s.prefix
+    ? `<div class="mini-cache config-visible">
+        <span>&#9881;</span> Prefix Cache: shared KV blocks across pods
+       </div>`
+    : `<div class="mini-cache config-hidden">
+        <span>&#9881;</span> Prefix Cache
+       </div>`;
+
+  d.innerHTML = `
+    <div class="mini-arch">
+      <div class="mini-component active">Gateway + EPP</div>
+      <div class="mini-arrow">&#8595;</div>
+      ${cacheHTML}
+      ${podsHTML}
+      ${loraHTML}
+      ${hpaHTML}
+      <div class="mini-arrow">&#8595;</div>
+      <div class="mini-component">GPU Hardware</div>
+    </div>
+  `;
+}
+
+renderConfigToggles();
+renderConfigDiagram();
+
+
+/* ═══════════════════════════════════════════════════
+   Section 4 — Version Timeline
+   ═══════════════════════════════════════════════════ */
+const versions = [
+  {
+    version: 'Red Hat AI 3.0',
+    year: '2024',
+    summary: 'Initial llm-d integration with basic vLLM serving',
+    features: [
+      'Initial llm-d integration',
+      'Basic vLLM model serving on OpenShift',
+      'Single-model deployment support',
+      'NVIDIA H100 GPU support',
+      'OpenAI-compatible API endpoint',
+      'Basic KServe InferenceService'
+    ]
+  },
+  {
+    version: 'Red Hat AI 3.3',
+    year: '2025',
+    summary: 'LLMInferenceService CRD, disaggregated P/D, multi-model',
+    features: [
+      'LLMInferenceService CRD for declarative LLM serving',
+      'Disaggregated prefill/decode support',
+      'Multi-model serving on shared infrastructure',
+      'EPP intelligent request routing',
+      'KV-cache-aware load balancing',
+      'H200 GPU support with extended HBM3e',
+      'AMD MI300X ROCm support',
+      'Gateway API integration'
+    ]
+  },
+  {
+    version: 'Red Hat AI 3.4',
+    year: '2025',
+    summary: 'Advanced routing, autoscaling, B200 support',
+    features: [
+      'LoRA-aware request routing in EPP',
+      'Prefix-cache-aware routing',
+      'HPA autoscaling with GPU-aware metrics',
+      'NVIDIA B200 (Blackwell) support',
+      'Multi-adapter LoRA serving',
+      'FP8 quantization for H100/H200/B200',
+      'Improved disaggregated serving performance',
+      'Advanced EPP scoring with configurable weights'
+    ]
+  }
+];
+
+function renderTimeline() {
+  const container = document.getElementById('timeline');
+  const line = container.querySelector('.timeline-line');
+  let html = '';
+  versions.forEach((v, i) => {
+    html += `
+      <div class="timeline-node${i === versions.length - 1 ? ' active' : ''}" data-idx="${i}" onclick="selectVersion(${i})">
+        <div class="timeline-dot"></div>
+        <div class="timeline-version">${v.version}</div>
+        <div class="timeline-year">${v.year}</div>
+        <div class="timeline-summary">${v.summary}</div>
+        <div class="timeline-detail">
+          <div class="timeline-detail-inner">
+            <ul>${v.features.map(f => `<li>${f}</li>`).join('')}</ul>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+  container.insertAdjacentElement('afterbegin', line);
+}
+
+function selectVersion(idx) {
+  document.querySelectorAll('.timeline-node').forEach((n, i) => {
+    n.classList.toggle('active', i === idx);
+  });
+}
+
+renderTimeline();
+
+
+/* ═══════════════════════════════════════════════════
+   Section 5 — Hardware Compatibility Matrix
+   ═══════════════════════════════════════════════════ */
+const gpus = [
+  { name: 'NVIDIA H100 SXM', serving: 'yes', disagg: 'yes', tp: 'yes', lora: 'yes', fp8: 'yes', badge: null },
+  { name: 'NVIDIA H100 PCIe', serving: 'yes', disagg: 'partial', tp: 'yes', lora: 'yes', fp8: 'yes', badge: null, note: 'Lower NVLink BW' },
+  { name: 'NVIDIA H200', serving: 'yes', disagg: 'yes', tp: 'yes', lora: 'yes', fp8: 'yes', badge: null },
+  { name: 'NVIDIA B200', serving: 'yes', disagg: 'yes', tp: 'yes', lora: 'yes', fp8: 'yes', badge: 'NEW' },
+  { name: 'AMD MI300X', serving: 'yes', disagg: 'yes', tp: 'yes', lora: 'partial', fp8: 'no', badge: null, note: 'Use FP16' }
+];
+
+const columns = ['Basic Serving', 'Disaggregated P/D', 'Tensor Parallelism', 'LoRA Multi-Adapter', 'FP8 Quantization'];
+
+function cellHTML(val, note) {
+  if (val === 'yes') return '<span class="hw-check" title="Fully supported">&#10003;</span>';
+  if (val === 'partial') return `<span class="hw-partial" title="${note || 'Partial support'}">&#9679;</span>`;
+  return `<span class="hw-no" title="${note || 'Not supported'}">&mdash;</span>`;
+}
+
+function renderHWMatrix() {
+  const container = document.getElementById('hwMatrix');
+  container.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align:left">GPU Model</th>
+          ${columns.map(c => `<th>${c}</th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>
+        ${gpus.map(g => `
+          <tr>
+            <td>${g.name}${g.badge ? `<span class="badge-new">${g.badge}</span>` : ''}</td>
+            <td>${cellHTML(g.serving)}</td>
+            <td>${cellHTML(g.disagg, g.note)}</td>
+            <td>${cellHTML(g.tp)}</td>
+            <td>${cellHTML(g.lora, g.name === 'AMD MI300X' ? 'Partial LoRA support' : '')}</td>
+            <td>${cellHTML(g.fp8, g.name === 'AMD MI300X' ? 'Use FP16' : '')}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+renderHWMatrix();
+
+
+/* ═══════════════════════════════════════════════════
+   Section 6 — Deployment Topology
+   ═══════════════════════════════════════════════════ */
+const topologies = [
+  {
+    id: 'single',
+    icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="8" y="8" width="3" height="3"/><rect x="13" y="8" width="3" height="3"/><rect x="8" y="13" width="3" height="3"/><rect x="13" y="13" width="3" height="3"/></svg>',
+    name: 'Single Node',
+    desc: 'One node with 1-8 GPUs. Ideal for development, testing, and small production models.',
+    specs: '1 node, up to 8 GPUs',
+    hardware: 'NVIDIA H100 SXM or H200 (8x GPU node)',
+    nodeCount: '1 node with 8x H100 80GB',
+    useCases: ['Development and testing', 'Models up to 70B parameters', 'Low-latency single-user inference', 'LoRA fine-tuned model serving'],
+    diagram: `
+      <div class="topo-diagram">
+        <div class="topo-box">
+          <div class="box-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="8" y="8" width="3" height="3"/><rect x="13" y="8" width="3" height="3"/><rect x="8" y="13" width="3" height="3"/><rect x="13" y="13" width="3" height="3"/></svg></div>
+          <div class="box-label">8x GPU Node</div>
+        </div>
+      </div>`
+  },
+  {
+    id: 'multi-node',
+    icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="8" height="8" rx="1"/><line x1="10" y1="6" x2="14" y2="6"/><line x1="10" y1="18" x2="14" y2="18"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="18" y1="10" x2="18" y2="14"/></svg>',
+    name: 'Multi-Node',
+    desc: 'Multiple nodes in one OpenShift cluster. Production-grade with high availability and scaling.',
+    specs: '4-32 nodes in a single cluster',
+    hardware: 'Mix of H100/H200/B200 nodes with InfiniBand',
+    nodeCount: '8 nodes (64 GPUs total)',
+    useCases: ['Production LLM serving at scale', 'Multiple model deployments', 'Disaggregated prefill/decode', 'Multi-tenant inference platform'],
+    diagram: `
+      <div class="topo-diagram">
+        <div class="topo-box">
+          <div class="box-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></div>
+          <div class="box-label">Node 1</div>
+        </div>
+        <span class="topo-connector-h">&harr;</span>
+        <div class="topo-box">
+          <div class="box-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></div>
+          <div class="box-label">Node 2</div>
+        </div>
+        <span class="topo-connector-h">&harr;</span>
+        <div class="topo-box">
+          <div class="box-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></div>
+          <div class="box-label">Node 3</div>
+        </div>
+        <span class="topo-connector-h">&harr;</span>
+        <div class="topo-box">
+          <div class="box-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></div>
+          <div class="box-label">Node N</div>
+        </div>
+      </div>`
+  },
+  {
+    id: 'multi-cluster',
+    icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="4"/><circle cx="18" cy="6" r="4"/><circle cx="12" cy="18" r="4"/><line x1="9" y1="8" x2="15" y2="8" stroke-dasharray="2"/><line x1="7.5" y1="9.5" x2="10.5" y2="15" stroke-dasharray="2"/><line x1="16.5" y1="9.5" x2="13.5" y2="15" stroke-dasharray="2"/></svg>',
+    name: 'Multi-Cluster',
+    desc: 'Multiple OpenShift clusters across regions. Geo-distributed for redundancy and low latency.',
+    specs: '2+ clusters across regions',
+    hardware: 'Region-optimized GPU mix',
+    nodeCount: '3 clusters, 24+ nodes total',
+    useCases: ['Geo-distributed inference', 'Disaster recovery and high availability', 'Regulatory compliance (data residency)', 'Global low-latency serving'],
+    diagram: `
+      <div class="topo-diagram">
+        <div class="topo-box-cluster">
+          <span class="cluster-label">US-East Cluster</span>
+          <div class="topo-box-sm">N1</div>
+          <div class="topo-box-sm">N2</div>
+          <div class="topo-box-sm">N3</div>
+        </div>
+        <span class="topo-connector-h">&harr;</span>
+        <div class="topo-box-cluster">
+          <span class="cluster-label">EU-West Cluster</span>
+          <div class="topo-box-sm">N1</div>
+          <div class="topo-box-sm">N2</div>
+          <div class="topo-box-sm">N3</div>
+        </div>
+        <span class="topo-connector-h">&harr;</span>
+        <div class="topo-box-cluster">
+          <span class="cluster-label">AP-South Cluster</span>
+          <div class="topo-box-sm">N1</div>
+          <div class="topo-box-sm">N2</div>
+        </div>
+      </div>`
+  }
+];
+
+function renderTopologies() {
+  const container = document.getElementById('topoCards');
+  container.innerHTML = topologies.map(t => `
+    <div class="topo-card" data-topo="${t.id}" onclick="selectTopo('${t.id}')">
+      <div class="topo-header">
+        <span class="topo-icon">${t.icon}</span>
+        <h3>${t.name}</h3>
+      </div>
+      <p>${t.desc}</p>
+      <div class="topo-specs">${t.specs}</div>
+      <div class="topo-detail">
+        <div class="topo-detail-inner">
+          <h4>Recommended Hardware</h4>
+          <p>${t.hardware}</p>
+          <h4>Example Scale</h4>
+          <p>${t.nodeCount}</p>
+          <h4>Use Cases</h4>
+          <ul>${t.useCases.map(u => `<li>${u}</li>`).join('')}</ul>
+          ${t.diagram}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function selectTopo(id) {
+  document.querySelectorAll('.topo-card').forEach(c => {
+    c.classList.toggle('active', c.dataset.topo === id && !c.classList.contains('active'));
+  });
+}
+
+renderTopologies();
+</script>
+</body>
+</html>

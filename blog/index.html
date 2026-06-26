@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenShift AI and llm-d: The Enterprise Path to Distributed LLM Inference</title>
+    <meta name="description" content="How llm-d, the CNCF Sandbox project for distributed LLM inference routing, powers Red Hat AI's enterprise inference stack on OpenShift.">
+    <meta name="author" content="Markell Rawls">
+    <link rel="icon" type="image/png" href="https://llm-d.ai/img/llm-d-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;600;700;800;900&family=Red+Hat+Text:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Red+Hat+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-code: #1a1a2e;
+            --bg-header: rgba(10, 10, 15, 0.85);
+            --text-primary: #e8e8f0;
+            --text-secondary: #a0a0b8;
+            --text-muted: #6b6b80;
+            --accent: #3b82f6;
+            --accent-dim: rgba(59, 130, 246, 0.15);
+            --accent-hover: #5b9bf7;
+            --border: rgba(255, 255, 255, 0.06);
+            --border-accent: rgba(59, 130, 246, 0.3);
+            --yaml-key: #7dd3fc;
+            --yaml-value-str: #86efac;
+            --yaml-value-num: #fbbf24;
+            --yaml-value-bool: #c084fc;
+            --yaml-comment: #6b7280;
+            --font-heading: 'Red Hat Display', sans-serif;
+            --font-body: 'Red Hat Text', sans-serif;
+            --font-mono: 'Red Hat Mono', 'Fira Code', 'Consolas', monospace;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scrollbar-color: var(--accent) var(--bg-primary);
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 18px;
+            line-height: 1.75;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Reading Progress Bar */
+        .reading-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), #8b5cf6);
+            z-index: 1001;
+            transition: width 0.1s linear;
+        }
+
+        /* Header */
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--bg-header);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .header-brand img {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+        }
+
+        .header-brand span {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 1.25rem;
+            letter-spacing: -0.02em;
+        }
+
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .header-nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .header-nav a:hover {
+            color: var(--accent);
+        }
+
+        /* Hero / Article Header */
+        .article-hero {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 4rem 1.5rem 2rem;
+        }
+
+        .article-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-tags .tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--accent-dim);
+            color: var(--accent);
+            border: 1px solid var(--border-accent);
+            border-radius: 100px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        .article-hero h1 {
+            font-family: var(--font-heading);
+            font-size: 2.75rem;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -0.03em;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .article-meta {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .article-meta .author {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .meta-separator {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--text-muted);
+        }
+
+        /* Article Body */
+        .article-body {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 4rem;
+        }
+
+        .article-body h2 {
+            font-family: var(--font-heading);
+            font-size: 1.85rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-top: 3rem;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+            line-height: 1.25;
+        }
+
+        .article-body h3 {
+            font-family: var(--font-heading);
+            font-size: 1.35rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-top: 2.25rem;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.01em;
+            line-height: 1.3;
+        }
+
+        .article-body p {
+            margin-bottom: 1.25rem;
+            color: var(--text-primary);
+        }
+
+        .article-body strong {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .article-body a {
+            color: var(--accent);
+            text-decoration: underline;
+            text-decoration-color: rgba(59, 130, 246, 0.3);
+            text-underline-offset: 3px;
+            transition: text-decoration-color 0.2s ease;
+        }
+
+        .article-body a:hover {
+            text-decoration-color: var(--accent);
+        }
+
+        .article-body ul, .article-body ol {
+            margin-bottom: 1.25rem;
+            padding-left: 1.5rem;
+        }
+
+        .article-body li {
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .article-body li::marker {
+            color: var(--accent);
+        }
+
+        /* Blockquotes */
+        .article-body blockquote {
+            border-left: 3px solid var(--accent);
+            background: var(--accent-dim);
+            padding: 1.25rem 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .article-body blockquote p {
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-bottom: 0;
+        }
+
+        /* Code Blocks */
+        .code-block {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            overflow: hidden;
+        }
+
+        .code-block-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.6rem 1.25rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .code-block-header span {
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .code-block pre {
+            padding: 1.25rem;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            line-height: 1.65;
+            color: var(--text-secondary);
+        }
+
+        .code-block code {
+            font-family: var(--font-mono);
+        }
+
+        /* YAML Syntax Colors */
+        .yk { color: var(--yaml-key); }
+        .ys { color: var(--yaml-value-str); }
+        .yn { color: var(--yaml-value-num); }
+        .yb { color: var(--yaml-value-bool); }
+        .yc { color: var(--yaml-comment); font-style: italic; }
+
+        /* Inline Code */
+        .article-body code {
+            font-family: var(--font-mono);
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent-hover);
+            padding: 0.15em 0.4em;
+            border-radius: 4px;
+            font-size: 0.88em;
+        }
+
+        /* Comparison Table */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .comparison-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+
+        .comparison-card h4 {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .comparison-card.upstream h4 {
+            color: var(--accent);
+        }
+
+        .comparison-card.enterprise h4 {
+            color: #ef4444;
+        }
+
+        .comparison-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .comparison-card li {
+            padding: 0.4rem 0;
+            padding-left: 1.25rem;
+            position: relative;
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+        }
+
+        .comparison-card li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.75rem;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .comparison-card.upstream li::before {
+            background: var(--accent);
+        }
+
+        .comparison-card.enterprise li::before {
+            background: #ef4444;
+        }
+
+        /* Release Timeline */
+        .release-timeline {
+            position: relative;
+            margin: 2rem 0;
+            padding-left: 2rem;
+        }
+
+        .release-timeline::before {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--accent), #8b5cf6, var(--accent));
+            border-radius: 1px;
+        }
+
+        .release-item {
+            position: relative;
+            margin-bottom: 2rem;
+            padding: 1.25rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .release-item::before {
+            content: '';
+            position: absolute;
+            left: -2rem;
+            top: 1.5rem;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--bg-primary);
+            border: 3px solid var(--accent);
+            z-index: 1;
+        }
+
+        .release-item h4 {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--accent);
+            margin-bottom: 0.25rem;
+        }
+
+        .release-item .release-date {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .release-item ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .release-item li {
+            padding: 0.3rem 0;
+            padding-left: 1rem;
+            position: relative;
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+        }
+
+        .release-item li::before {
+            content: '+';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: 700;
+            font-family: var(--font-mono);
+        }
+
+        /* Steps */
+        .steps {
+            counter-reset: step-counter;
+            margin: 1.5rem 0;
+        }
+
+        .step {
+            counter-increment: step-counter;
+            position: relative;
+            padding: 1rem 1.25rem 1rem 3.5rem;
+            margin-bottom: 0.75rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .step::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--accent-dim);
+            border: 1px solid var(--border-accent);
+            color: var(--accent);
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 0.82rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            text-align: center;
+        }
+
+        /* CTA Box */
+        .cta-box {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(139, 92, 246, 0.08));
+            border: 1px solid var(--border-accent);
+            border-radius: 16px;
+            padding: 2rem 2.5rem;
+            margin: 3rem 0 2rem;
+            text-align: center;
+        }
+
+        .cta-box h3 {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            margin-top: 0;
+        }
+
+        .cta-box p {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 0.8rem 2rem;
+            background: var(--accent);
+            color: #fff;
+            text-decoration: none;
+            font-family: var(--font-heading);
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: 10px;
+            transition: background 0.2s ease, transform 0.15s ease;
+        }
+
+        .cta-button:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        /* Footer */
+        .site-footer {
+            border-top: 1px solid var(--border);
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+        }
+
+        .footer-inner {
+            max-width: 780px;
+            margin: 0 auto;
+        }
+
+        .footer-brand {
+            font-family: var(--font-heading);
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.88rem;
+            transition: color 0.2s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        .footer-counter {
+            color: var(--text-muted);
+            font-size: 0.82rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .article-hero h1 {
+                font-size: 1.9rem;
+            }
+
+            .article-hero {
+                padding: 3rem 1.25rem 1.5rem;
+            }
+
+            .article-body {
+                padding: 2rem 1.25rem 3rem;
+            }
+
+            .article-body h2 {
+                font-size: 1.5rem;
+            }
+
+            .article-meta {
+                flex-wrap: wrap;
+                gap: 0.75rem;
+            }
+
+            .comparison-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-box {
+                padding: 1.5rem;
+            }
+
+            .header-nav {
+                gap: 1rem;
+            }
+
+            .header-nav a {
+                font-size: 0.82rem;
+            }
+
+            .code-block pre {
+                font-size: 0.78rem;
+                padding: 1rem;
+            }
+
+            .step {
+                padding-left: 3rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .article-hero h1 {
+                font-size: 1.55rem;
+            }
+
+            .header-brand span {
+                font-size: 1.05rem;
+            }
+
+            body {
+                font-size: 16px;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Reading Progress Bar -->
+<div class="reading-progress" id="readingProgress"></div>
+
+<!-- Header -->
+<header class="site-header">
+    <div class="header-inner">
+        <a href="https://llm-d.ai" class="header-brand">
+            <img src="https://llm-d.ai/img/llm-d-icon.png" alt="llm-d logo">
+            <span>llm-d</span>
+        </a>
+        <nav class="header-nav">
+            <a href="../">Interactive App</a>
+            <a href="https://llm-d.ai">llm-d.ai</a>
+        </nav>
+    </div>
+</header>
+
+<!-- Article Hero -->
+<div class="article-hero">
+    <div class="article-tags">
+        <span class="tag">llm-d</span>
+        <span class="tag">OpenShift AI</span>
+        <span class="tag">Red Hat</span>
+        <span class="tag">Kubernetes</span>
+        <span class="tag">Enterprise AI</span>
+        <span class="tag">Inference</span>
+    </div>
+    <h1>OpenShift AI and llm-d: The Enterprise Path to Distributed LLM Inference</h1>
+    <div class="article-meta">
+        <span class="author">Markell Rawls</span>
+        <span class="meta-separator"></span>
+        <span>June 2026</span>
+        <span class="meta-separator"></span>
+        <span>~12 min read</span>
+    </div>
+</div>
+
+<!-- Article Body -->
+<article class="article-body">
+
+    <h2>Introduction</h2>
+    <p>
+        There is a familiar pattern in enterprise technology: a demo that runs beautifully on a single machine crumbles the moment it faces real production traffic. Large language model inference is no exception. Getting a model to respond on your laptop is straightforward. Getting that same model to serve 10,000 concurrent users with sub-second time-to-first-token, guaranteed uptime, automatic scaling, and GPU cost efficiency is an entirely different engineering challenge.
+    </p>
+    <p>
+        The gap between "it works" and "it works at scale with SLAs" is where most organizations stall. Building production inference infrastructure from scratch means solving a cascade of hard problems: intelligent request routing, KV-cache management across distributed GPU pools, disaggregated prefill and decode scheduling, GPU topology-aware placement, autoscaling that responds to inference-specific signals rather than generic CPU metrics, and monitoring that surfaces the metrics that actually matter for LLM workloads.
+    </p>
+    <p>
+        This is precisely the space where the upstream-to-enterprise pipeline proves its value. <strong>llm-d</strong> is the <a href="https://www.cncf.io/" target="_blank" rel="noopener">CNCF</a> Sandbox open-source project purpose-built for distributed LLM inference routing. <strong>Red Hat AI</strong> (formerly OpenShift AI) is the enterprise product that takes llm-d upstream and makes it production-ready with support contracts, hardware certification, and deep integration across the Red Hat ecosystem. Together, they represent the most complete path from open-source innovation to enterprise-grade LLM infrastructure available today.
+    </p>
+
+    <h2>What Is Red Hat AI?</h2>
+    <p>
+        Red Hat AI is Red Hat's enterprise AI platform built on top of OpenShift, Red Hat's Kubernetes distribution. Previously branded as "OpenShift AI," it was rebranded to "Red Hat AI" to reflect a scope that extends well beyond the container orchestration layer into a full-lifecycle AI platform.
+    </p>
+    <p>
+        At its core, Red Hat AI brings together several capabilities under one unified platform:
+    </p>
+    <ul>
+        <li><strong>Model Serving</strong> &mdash; Powered by vLLM and llm-d under the hood, providing high-performance inference with intelligent routing, disaggregated serving, and KV-cache-aware scheduling. This component is officially called the <strong>Red Hat AI Inference Server</strong>.</li>
+        <li><strong>Model Registry</strong> &mdash; A centralized catalog for managing model artifacts, versions, and metadata across an organization.</li>
+        <li><strong>Training via InstructLab</strong> &mdash; An open-source approach to model fine-tuning that allows domain experts to contribute knowledge without needing deep ML expertise.</li>
+        <li><strong>GPU Management</strong> &mdash; Automatic GPU driver management, topology detection, and workload placement through the NVIDIA GPU Operator and Node Feature Discovery (NFD).</li>
+    </ul>
+    <p>
+        Everything in Red Hat AI is Kubernetes-native. Models are deployed through Custom Resource Definitions (CRDs). Lifecycle management happens through operators and controllers. Monitoring flows through the same Prometheus and Grafana stack that teams already use for their other OpenShift workloads. This is not an AI platform bolted onto Kubernetes; it is an AI platform built <em>as</em> Kubernetes.
+    </p>
+
+    <h2>The Upstream-to-Enterprise Pipeline</h2>
+    <p>
+        If you have worked with Red Hat technologies before, the relationship between llm-d and Red Hat AI will feel familiar. It follows the same model that has powered enterprise open source for decades:
+    </p>
+    <blockquote>
+        <p>Linux kernel becomes RHEL. Kubernetes becomes OpenShift. llm-d becomes Red Hat AI Inference Server.</p>
+    </blockquote>
+    <p>
+        <strong>llm-d</strong> is the upstream CNCF Sandbox project. It is community-driven, fast-moving, and where bleeding-edge features land first. New routing strategies, experimental optimizations, and novel approaches to KV-cache management all debut in the llm-d project. The community iterates quickly, and the API surface evolves as the project learns from real-world deployments.
+    </p>
+    <p>
+        <strong>Red Hat AI</strong> takes llm-d at specific points in its release cycle, certifies it against specific hardware configurations, tests it through Red Hat's extensive QE process, adds enterprise features like FIPS compliance and air-gapped deployment support, and ships it with 24/7 support. When customers deploy the Red Hat AI Inference Server, they are running llm-d with the confidence that it has been tested on their specific GPU hardware, validated against their OpenShift version, and backed by a support organization that can respond at 3 AM on a Saturday.
+    </p>
+    <p>
+        The pipeline flows both directions. Red Hat engineers are active contributors to the llm-d upstream project. Bug fixes discovered through enterprise testing flow back to the community. Performance optimizations validated at scale in customer environments become upstream features. The <code>LLMInferenceService</code> CRD itself was designed collaboratively to be the Kubernetes-native standard for deploying llm-d workloads, whether on vanilla Kubernetes or on OpenShift.
+    </p>
+    <p>
+        This bidirectional flow is what separates the Red Hat model from a simple vendor fork. The upstream project gets stronger because of enterprise feedback, and the enterprise product stays current because it tracks a healthy, active upstream community.
+    </p>
+
+    <h2>Key Integration Points</h2>
+
+    <h3>KServe and the LLMInferenceService CRD</h3>
+    <p>
+        <a href="https://kserve.github.io/kserve/" target="_blank" rel="noopener">KServe</a> is the standard model serving framework on Kubernetes, providing a consistent API for deploying and managing machine learning models. Red Hat AI uses KServe under the hood as the foundation for its model serving capabilities.
+    </p>
+    <p>
+        The primary API for deploying inference workloads is the <code>LLMInferenceService</code> CRD. This custom resource encapsulates everything needed to run a distributed LLM inference deployment: the model source, serving runtime configuration, GPU requirements, disaggregated serving topology, routing strategy, and autoscaling parameters. A single YAML file replaces what would otherwise be dozens of manually coordinated resources.
+    </p>
+
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>yaml</span>
+            <span>llminferenceservice.yaml</span>
+        </div>
+<pre><code><span class="yk">apiVersion:</span> <span class="ys">serving.llm-d.ai/v1alpha1</span>
+<span class="yk">kind:</span> <span class="ys">LLMInferenceService</span>
+<span class="yk">metadata:</span>
+  <span class="yk">name:</span> <span class="ys">llama-3-70b</span>
+  <span class="yk">namespace:</span> <span class="ys">ai-inference</span>
+<span class="yk">spec:</span>
+  <span class="yk">model:</span>
+    <span class="yk">name:</span> <span class="ys">meta-llama/Llama-3-70B-Instruct</span>
+    <span class="yk">source:</span>
+      <span class="yk">uri:</span> <span class="ys">pvc://model-store/llama-3-70b</span>
+  <span class="yk">serving:</span>
+    <span class="yk">runtime:</span> <span class="ys">vllm</span>
+    <span class="yk">replicas:</span> <span class="yn">4</span>
+    <span class="yk">resources:</span>
+      <span class="yk">gpu:</span> <span class="ys">nvidia.com/gpu</span>
+      <span class="yk">gpuCount:</span> <span class="yn">4</span>
+      <span class="yk">gpuType:</span> <span class="ys">H100-SXM</span>
+    <span class="yk">disaggregated:</span>
+      <span class="yk">enabled:</span> <span class="yb">true</span>
+      <span class="yk">prefillReplicas:</span> <span class="yn">2</span>
+      <span class="yk">decodeReplicas:</span> <span class="yn">2</span>
+  <span class="yk">routing:</span>
+    <span class="yk">endpoint:</span> <span class="ys">EPP</span>
+    <span class="yk">strategy:</span> <span class="ys">kv-cache-aware</span>
+  <span class="yk">autoscaling:</span>
+    <span class="yk">minReplicas:</span> <span class="yn">2</span>
+    <span class="yk">maxReplicas:</span> <span class="yn">8</span>
+    <span class="yk">targetUtilization:</span> <span class="yn">70</span></code></pre>
+    </div>
+
+    <p>
+        This YAML tells the system everything it needs to know: pull the Llama 3 70B model from a persistent volume, run it on vLLM across four replicas with H100 GPUs, split those replicas into a disaggregated prefill/decode topology, route requests through the Endpoint Picker (EPP) with KV-cache-aware scheduling, and autoscale between two and eight replicas based on utilization. The operator handles the rest &mdash; creating pods, services, configuring networking, and wiring up the routing layer.
+    </p>
+
+    <h3>GPU Operator and Node Feature Discovery</h3>
+    <p>
+        Distributed LLM inference is fundamentally a GPU orchestration problem, and getting GPU placement right is non-negotiable. The OpenShift <strong>GPU Operator</strong> manages NVIDIA GPU drivers and the container runtime hooks needed for GPU passthrough into containers. It ensures the correct driver version is installed, CUDA libraries are available, and device plugins are registered with the kubelet.
+    </p>
+    <p>
+        <strong>Node Feature Discovery (NFD)</strong> works alongside the GPU Operator to detect and label the GPU topology of every node in the cluster. It identifies GPU models, memory capacity, NVLink connectivity between GPUs, PCIe topology, and NUMA node affinity. These labels become the building blocks for intelligent scheduling decisions.
+    </p>
+    <p>
+        Together, GPU Operator and NFD ensure that when an <code>LLMInferenceService</code> requests four H100 GPUs with tensor parallelism, the scheduler places the pod on a node where those four GPUs are connected via NVLink for maximum inter-GPU bandwidth. This is critical for disaggregated serving, where prefill and decode workloads have very different GPU communication patterns and placing them on the wrong topology can destroy performance.
+    </p>
+
+    <h3>Monitoring Integration</h3>
+    <p>
+        LLM inference generates a unique set of operational signals that generic application monitoring simply does not capture. OpenShift's built-in Prometheus instance scrapes llm-d metrics natively, providing visibility into the metrics that matter:
+    </p>
+    <ul>
+        <li><strong>Time-to-first-token (TTFT)</strong> &mdash; The latency a user experiences before the first token appears. This is the primary responsiveness metric.</li>
+        <li><strong>Inter-token latency (ITL)</strong> &mdash; The time between successive tokens during generation. Spikes here cause visible "stuttering" in streaming responses.</li>
+        <li><strong>Queue depth</strong> &mdash; The number of requests waiting for a free inference slot. This is the leading indicator for when scaling is needed.</li>
+        <li><strong>KV-cache utilization</strong> &mdash; How much of the available KV-cache memory is consumed. When this saturates, new requests must wait or be routed elsewhere.</li>
+        <li><strong>GPU utilization and memory</strong> &mdash; Standard GPU metrics that, when correlated with inference metrics, reveal whether the system is compute-bound or memory-bound.</li>
+    </ul>
+    <p>
+        Grafana dashboards purpose-built for inference observability ship with Red Hat AI, providing a single pane of glass for the entire inference stack. Alert rules can be configured for SLA violations &mdash; for example, triggering a page when p99 TTFT exceeds 500ms or when KV-cache utilization on any replica exceeds 90%.
+    </p>
+
+    <h2>Walking Through a Deployment</h2>
+    <p>
+        Let's trace through what it actually looks like to go from an empty OpenShift cluster to a production inference endpoint. These are the concrete steps an operator takes:
+    </p>
+
+    <div class="steps">
+        <div class="step"><strong>Install the Red Hat AI Operator</strong> from OperatorHub. This deploys the controllers that understand the LLMInferenceService CRD and manage the inference lifecycle.</div>
+        <div class="step"><strong>Configure GPU Operator and NFD.</strong> The GPU Operator installs NVIDIA drivers on GPU nodes. NFD labels those nodes with GPU topology information. Both are available as OpenShift operators.</div>
+        <div class="step"><strong>Create a model storage PVC and download the model.</strong> The model weights are stored on a PersistentVolumeClaim backed by high-throughput storage (ideally NVMe-backed). Model download can be handled by a pre-pull job or by referencing a container registry.</div>
+        <div class="step"><strong>Apply the LLMInferenceService CRD.</strong> Submit the YAML resource shown earlier. The operator validates the configuration against available cluster resources.</div>
+        <div class="step"><strong>The operator creates the full stack:</strong> vLLM inference pods (split into prefill and decode if disaggregated), the EPP routing deployment, a Kubernetes Service for internal traffic, and an OpenShift Route for external access.</div>
+        <div class="step"><strong>Test with curl to the OpenShift Route.</strong> The endpoint exposes an OpenAI-compatible API, so any existing client library or tool that speaks the OpenAI chat completions protocol works out of the box.</div>
+        <div class="step"><strong>Monitor via OpenShift Console dashboards.</strong> The built-in dashboards show inference metrics alongside cluster health, providing operational visibility from day one.</div>
+    </div>
+
+    <p>
+        What is notable about this workflow is what the operator <em>does not</em> have to do: there is no manual GPU driver installation, no hand-written Kubernetes networking configuration, no custom Prometheus scrape configs, and no bespoke load balancer setup. The operator and CRD abstract away the complexity that would otherwise consume weeks of engineering time.
+    </p>
+
+    <h2>Release Progression</h2>
+    <p>
+        Red Hat AI has evolved rapidly alongside the llm-d upstream project. Tracking the release progression reveals how quickly the inference capabilities have matured.
+    </p>
+
+    <div class="release-timeline">
+        <div class="release-item">
+            <h4>Red Hat AI 3</h4>
+            <div class="release-date">2024</div>
+            <ul>
+                <li>Initial integration of vLLM-based model serving</li>
+                <li>Basic single-model deployment on OpenShift</li>
+                <li>GPU auto-detection and driver management</li>
+                <li>OpenShift 4.14+ support</li>
+            </ul>
+        </div>
+        <div class="release-item">
+            <h4>Red Hat AI 3.3</h4>
+            <div class="release-date">Early 2025</div>
+            <ul>
+                <li>Introduction of the LLMInferenceService CRD</li>
+                <li>Disaggregated prefill/decode support</li>
+                <li>Multi-model serving on shared GPU pools</li>
+                <li>NVIDIA H100 and H200 certification</li>
+                <li>Enhanced inference monitoring dashboards</li>
+            </ul>
+        </div>
+        <div class="release-item">
+            <h4>Red Hat AI 3.4</h4>
+            <div class="release-date">Mid 2025</div>
+            <ul>
+                <li>Advanced EPP routing: KV-cache-aware, LoRA-aware, prefix-cache-aware</li>
+                <li>HPA-based autoscaling for inference pods</li>
+                <li>NVIDIA B200 support</li>
+                <li>AMD MI300X support (tech preview)</li>
+                <li>Multi-cluster inference federation (tech preview)</li>
+                <li>Integration with InstructLab for fine-tune-to-deploy pipeline</li>
+            </ul>
+        </div>
+    </div>
+
+    <p>
+        The acceleration between releases is significant. What began as basic model serving in 2024 has evolved into a fully disaggregated, multi-strategy routing platform with support for the latest GPU architectures from both NVIDIA and AMD. Each release tracks upstream llm-d features that have been stabilized and certified for enterprise use.
+    </p>
+
+    <h2>Enterprise vs. Upstream: Different Tools for Different Stages</h2>
+    <p>
+        A common misconception is that choosing between upstream and enterprise is a binary decision. In practice, the most effective organizations use both, choosing the right tool for each stage of their workflow.
+    </p>
+
+    <div class="comparison-grid">
+        <div class="comparison-card upstream">
+            <h4>Upstream llm-d</h4>
+            <ul>
+                <li>Latest features, often weeks ahead of enterprise</li>
+                <li>Community-driven support via GitHub and Slack</li>
+                <li>Bring your own Kubernetes cluster</li>
+                <li>Manual GPU driver and topology setup</li>
+                <li>DIY monitoring and alerting</li>
+                <li>Ideal for development and experimentation</li>
+                <li>Rapid iteration on routing strategies</li>
+                <li>Full flexibility to customize and extend</li>
+            </ul>
+        </div>
+        <div class="comparison-card enterprise">
+            <h4>Red Hat AI</h4>
+            <ul>
+                <li>Certified hardware profiles tested by Red Hat QE</li>
+                <li>24/7 enterprise support with SLA guarantees</li>
+                <li>Automatic GPU driver management</li>
+                <li>Integrated monitoring, logging, and alerting</li>
+                <li>Security patches and CVE response</li>
+                <li>FIPS compliance for regulated industries</li>
+                <li>Air-gapped deployment for disconnected environments</li>
+                <li>Certified and signed container images</li>
+            </ul>
+        </div>
+    </div>
+
+    <p>
+        The sweet spot for many organizations is to use upstream llm-d in development and staging environments where engineers need access to the latest features and the freedom to experiment with different configurations. When a workload is ready for production &mdash; when it needs to serve real users with contractual SLAs &mdash; it moves to Red Hat AI, where the same CRD-based API ensures that the deployment manifest transfers directly from staging to production with minimal changes.
+    </p>
+    <p>
+        This is not about upstream being inferior. It is about recognizing that production infrastructure has requirements that extend far beyond feature functionality. When an inference endpoint is serving a customer-facing application at 3 AM and something breaks, the difference between "file a GitHub issue and wait" and "call Red Hat support and get an engineer on the phone" can mean the difference between a minor incident and a major outage.
+    </p>
+
+    <h2>Why This Architecture Matters Now</h2>
+    <p>
+        LLM inference is transitioning from an experimental capability to critical infrastructure. Organizations are embedding LLM-powered features into their core products &mdash; customer support agents, code generation tools, document analysis pipelines, and real-time decision systems. When these features go down, revenue stops.
+    </p>
+    <p>
+        The infrastructure patterns that served the early days of LLM adoption &mdash; single-GPU deployments behind a basic load balancer &mdash; cannot meet these demands. The request patterns are unique: long-running streaming connections, variable-length outputs, memory-intensive KV-cache state, and bursty traffic patterns that make traditional autoscaling heuristics unreliable.
+    </p>
+    <p>
+        llm-d was built specifically for these challenges. Its EPP (Endpoint Picker) routing layer understands inference semantics: it knows which replicas have warm KV-cache entries, which are running prefill versus decode, which have available GPU memory, and which are about to complete long-running requests. This is not generic HTTP load balancing &mdash; it is inference-aware traffic management.
+    </p>
+    <p>
+        Red Hat AI takes these capabilities and wraps them in the operational framework that enterprise teams need: a single operator that manages the full stack, monitoring that speaks the language of inference metrics, GPU management that handles driver lifecycle without manual intervention, and a support organization that understands the entire stack from GPU silicon to API response.
+    </p>
+    <p>
+        For organizations evaluating their inference infrastructure strategy, the llm-d-to-Red-Hat-AI pipeline offers a compelling path. Start with upstream for speed and experimentation. Graduate to enterprise for stability and support. Contribute improvements back to the community. This is the same model that made Linux the foundation of the internet and Kubernetes the foundation of cloud computing. It is now making llm-d the foundation of enterprise LLM inference.
+    </p>
+
+    <h2>Conclusion</h2>
+    <p>
+        The relationship between llm-d and Red Hat AI represents the best of open source operating at its full potential. Innovation happens in the community, where researchers, engineers, and operators collaborate on the hardest problems in distributed inference. Enterprise hardening happens at Red Hat, where that innovation is tested, certified, and backed by the support that production workloads demand.
+    </p>
+    <p>
+        As LLM inference becomes critical infrastructure &mdash; as fundamental to the enterprise as databases and message queues &mdash; this model ensures that organizations can move fast without sacrificing reliability. They can adopt cutting-edge routing strategies without taking on the operational risk of running unsupported software. They can run on the latest GPU hardware knowing that someone has tested the full stack before it reaches their cluster.
+    </p>
+    <p>
+        The enterprise path to distributed LLM inference is not about choosing between open source and commercial software. It is about using both, at the right stage, with the right expectations. llm-d and Red Hat AI make that path concrete.
+    </p>
+
+    <!-- Call to Action -->
+    <div class="cta-box">
+        <h3>Explore the Full Architecture</h3>
+        <p>See how llm-d, vLLM, EPP, and the full inference stack fit together in our interactive architecture explorer.</p>
+        <a href="../" class="cta-button">Launch Interactive App</a>
+    </div>
+
+</article>
+
+<!-- Footer -->
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-brand">Part of the llm-d Content Hub</div>
+        <div class="footer-links">
+            <a href="../">Interactive App</a>
+            <a href="https://llm-d.ai">llm-d.ai</a>
+            <a href="https://github.com/llm-d" target="_blank" rel="noopener">GitHub</a>
+        </div>
+        <div class="footer-counter">Content 10 of 15</div>
+    </div>
+</footer>
+
+<!-- Minimal JS: Reading Progress Bar -->
+<script>
+    (function() {
+        var bar = document.getElementById('readingProgress');
+        if (!bar) return;
+        function updateProgress() {
+            var scrollTop = window.scrollY || document.documentElement.scrollTop;
+            var docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            var progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+            bar.style.width = Math.min(progress, 100) + '%';
+        }
+        window.addEventListener('scroll', updateProgress, { passive: true });
+        updateProgress();
+    })();
+</script>
+
+</body>
+</html>
