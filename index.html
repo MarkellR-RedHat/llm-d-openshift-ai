@@ -3,32 +3,52 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OpenShift AI Integration | llm-d</title>
+<title>OpenShift AI Integration | llm-d Enterprise Deployment Planner</title>
 <link rel="icon" type="image/png" href="https://llm-d.ai/img/llm-d-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@700;900&family=Red+Hat+Text:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700;900&family=Red+Hat+Text:wght@400;500;700&family=Red+Hat+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
+/* ═══════════════════════════════════════════════════
+   CSS Variables & Reset
+   ═══════════════════════════════════════════════════ */
 :root {
-  --bg-body: #0a0a0f;
-  --bg-card: #12121a;
-  --bg-header: #0d0d14;
-  --border-card: #1e1e32;
-  --text-primary: #e8e8f0;
-  --text-secondary: #9898b0;
-  --text-muted: #6a6a80;
+  --bg-body: #0a0e17;
+  --bg-card: #111827;
+  --bg-card-hover: #1a2332;
+  --bg-header: #0c1019;
+  --bg-code: #0d1117;
+  --border-card: #1e293b;
+  --border-active: #3b82f6;
+  --text-primary: #e8ecf4;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
   --blue: #3b82f6;
-  --green: #00e676;
-  --amber: #ffab00;
-  --red: #ff1744;
-  --purple: #7c4dff;
+  --blue-dim: rgba(59, 130, 246, 0.15);
+  --blue-glow: rgba(59, 130, 246, 0.4);
+  --green: #22c55e;
+  --green-dim: rgba(34, 197, 94, 0.12);
+  --amber: #f59e0b;
+  --amber-dim: rgba(245, 158, 11, 0.12);
+  --red: #ef4444;
+  --red-dim: rgba(239, 68, 68, 0.12);
+  --purple: #8b5cf6;
+  --purple-dim: rgba(139, 92, 246, 0.12);
+  --cyan: #06b6d4;
+  --cyan-dim: rgba(6, 182, 212, 0.12);
   --radius: 12px;
+  --radius-sm: 8px;
+  --radius-xs: 6px;
   --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+  --transition-fast: 0.15s ease;
+  --mono: 'Red Hat Mono', 'SF Mono', 'Fira Code', Consolas, monospace;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+  --shadow-glow: 0 0 20px var(--blue-glow);
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 html { scroll-behavior: smooth; }
 
 body {
@@ -38,6 +58,7 @@ body {
   color: var(--text-primary);
   line-height: 1.6;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -49,16 +70,24 @@ h1, h2, h3, h4, h5, h6 {
 a { color: var(--blue); text-decoration: none; transition: color var(--transition); }
 a:hover { color: #60a5fa; }
 
-/* ── Header ── */
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-body); }
+::-webkit-scrollbar-thumb { background: var(--border-card); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ═══════════════════════════════════════════════════
+   Header
+   ═══════════════════════════════════════════════════ */
 .site-header {
   position: sticky;
   top: 0;
-  z-index: 100;
-  background: rgba(13, 13, 20, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  z-index: 1000;
+  background: rgba(12, 16, 25, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-card);
-  padding: 0 24px;
+  padding: 0 32px;
   height: 64px;
   display: flex;
   align-items: center;
@@ -99,29 +128,90 @@ a:hover { color: #60a5fa; }
 .header-right {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 8px;
 }
 
 .header-right a {
   color: var(--text-secondary);
   font-weight: 500;
-  font-size: 0.9rem;
-  transition: color var(--transition);
+  font-size: 0.875rem;
+  padding: 6px 14px;
+  border-radius: var(--radius-xs);
+  transition: all var(--transition);
 }
 
 .header-right a:hover {
   color: var(--text-primary);
+  background: rgba(255,255,255,0.05);
 }
 
-/* ── Main content ── */
+/* ═══════════════════════════════════════════════════
+   Navigation Tabs
+   ═══════════════════════════════════════════════════ */
+.nav-tabs {
+  position: sticky;
+  top: 64px;
+  z-index: 999;
+  background: rgba(10, 14, 23, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-card);
+  padding: 0 32px;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.nav-tabs::-webkit-scrollbar { display: none; }
+
+.nav-tab {
+  padding: 12px 18px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all var(--transition);
+  user-select: none;
+}
+
+.nav-tab:hover {
+  color: var(--text-secondary);
+}
+
+.nav-tab.active {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+}
+
+/* ═══════════════════════════════════════════════════
+   Main Layout
+   ═══════════════════════════════════════════════════ */
 .main-content {
-  max-width: 1200px;
+  max-width: 1320px;
   margin: 0 auto;
-  padding: 48px 24px 80px;
+  padding: 48px 32px 80px;
 }
 
 .section {
   margin-bottom: 80px;
+  scroll-margin-top: 140px;
+}
+
+.section-header {
+  margin-bottom: 32px;
+}
+
+.section-label {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--blue);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
 }
 
 .section-title {
@@ -133,39 +223,285 @@ a:hover { color: #60a5fa; }
 
 .section-subtitle {
   color: var(--text-secondary);
-  margin-bottom: 32px;
-  font-size: 1rem;
+  font-size: 0.95rem;
+  max-width: 680px;
 }
 
-/* ── Hero ── */
+/* ═══════════════════════════════════════════════════
+   Hero Section
+   ═══════════════════════════════════════════════════ */
 .hero {
   text-align: center;
-  margin-bottom: 64px;
+  padding: 40px 0 64px;
+  position: relative;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 400px;
+  background: radial-gradient(ellipse, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .hero h1 {
-  font-size: clamp(2rem, 5vw, 3.25rem);
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
   font-weight: 900;
   margin-bottom: 16px;
-  background: linear-gradient(135deg, var(--blue), var(--purple));
+  background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 50%, var(--cyan) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  position: relative;
 }
 
 .hero p {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   color: var(--text-secondary);
-  max-width: 700px;
-  margin: 0 auto;
+  max-width: 720px;
+  margin: 0 auto 32px;
+  line-height: 1.7;
 }
 
-/* ── Architecture Layers ── */
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.hero-stat {
+  text-align: center;
+}
+
+.hero-stat-value {
+  font-family: 'Red Hat Display', sans-serif;
+  font-weight: 900;
+  font-size: 1.75rem;
+  color: var(--blue);
+}
+
+.hero-stat-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ═══════════════════════════════════════════════════
+   Common Components
+   ═══════════════════════════════════════════════════ */
+.btn {
+  padding: 10px 24px;
+  border-radius: var(--radius-sm);
+  font-family: 'Red Hat Text', sans-serif;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+
+.btn-primary {
+  background: var(--blue);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px var(--blue-glow);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-card);
+}
+
+.btn-secondary:hover {
+  border-color: var(--text-muted);
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.03);
+}
+
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+}
+
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  border: 1px solid var(--border-card);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.btn-icon:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.badge-blue { background: var(--blue-dim); color: var(--blue); }
+.badge-green { background: var(--green-dim); color: var(--green); }
+.badge-amber { background: var(--amber-dim); color: var(--amber); }
+.badge-red { background: var(--red-dim); color: var(--red); }
+.badge-purple { background: var(--purple-dim); color: var(--purple); }
+
+.pill-group {
+  display: flex;
+  gap: 4px;
+  background: rgba(0,0,0,0.3);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  border: 1px solid var(--border-card);
+}
+
+.pill {
+  padding: 8px 18px;
+  border-radius: var(--radius-xs);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.pill:hover {
+  color: var(--text-secondary);
+}
+
+.pill.active {
+  background: var(--blue);
+  color: #fff;
+  box-shadow: 0 2px 8px var(--blue-glow);
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+  transition: all var(--transition);
+}
+
+.card:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.code-block {
+  background: var(--bg-code);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  overflow-x: auto;
+  white-space: pre;
+  position: relative;
+}
+
+.code-block .k { color: var(--blue); }
+.code-block .v { color: var(--green); }
+.code-block .c { color: var(--text-muted); font-style: italic; }
+.code-block .n { color: var(--amber); }
+.code-block .s { color: #e879f9; }
+.code-block .p { color: var(--text-muted); }
+
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(0,0,0,0.3);
+  border-bottom: 1px solid var(--border-card);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.code-header-label {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.copy-btn {
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: transparent;
+  border: 1px solid var(--border-card);
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.copy-btn:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.copy-btn.copied {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.tooltip {
+  position: relative;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+/* ═══════════════════════════════════════════════════
+   Section 1: Architecture Diagram
+   ═══════════════════════════════════════════════════ */
+.arch-container {
+  position: relative;
+}
+
 .arch-stack {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-width: 900px;
+  gap: 4px;
+  max-width: 960px;
   margin: 0 auto;
 }
 
@@ -175,57 +511,82 @@ a:hover { color: #60a5fa; }
   transition: all var(--transition);
   overflow: hidden;
   border: 1px solid var(--border-card);
+  background: var(--bg-card);
 }
 
 .arch-layer:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.1);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(59,130,246,0.25);
 }
 
 .arch-layer.expanded {
-  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 8px 32px rgba(59,130,246,0.12);
+  border-color: rgba(59,130,246,0.4);
 }
 
 .layer-bar {
   display: flex;
   align-items: center;
-  padding: 16px 24px;
-  gap: 16px;
+  padding: 14px 20px;
+  gap: 14px;
   user-select: none;
 }
 
+.layer-badge {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--blue);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.layer-badge.l7 { background: #3b82f6; }
+.layer-badge.l6 { background: #4570e6; }
+.layer-badge.l5 { background: #4e5ed6; }
+.layer-badge.l4 { background: #5a4cc6; }
+.layer-badge.l3 { background: #6840b6; }
+.layer-badge.l2 { background: #7a36a4; }
+.layer-badge.l1 { background: #8b2c96; }
+
 .layer-icon {
-  font-size: 1.5rem;
-  width: 40px;
+  font-size: 1.3rem;
+  width: 36px;
   text-align: center;
   flex-shrink: 0;
+  color: var(--text-secondary);
 }
 
-.layer-number {
-  font-family: var(--mono);
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  width: 20px;
-  flex-shrink: 0;
-}
-
-.layer-info { flex: 1; }
+.layer-info { flex: 1; min-width: 0; }
 
 .layer-name {
   font-family: 'Red Hat Display', sans-serif;
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   color: var(--text-primary);
 }
 
 .layer-subtitle {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.layer-tags {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .layer-chevron {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   transition: transform var(--transition);
   color: var(--text-muted);
   flex-shrink: 0;
@@ -238,97 +599,115 @@ a:hover { color: #60a5fa; }
 .layer-detail {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .arch-layer.expanded .layer-detail {
-  max-height: 600px;
+  max-height: 1200px;
 }
 
 .layer-detail-inner {
-  padding: 0 24px 24px;
+  padding: 0 20px 24px;
   border-top: 1px solid var(--border-card);
-  margin-top: 0;
   padding-top: 20px;
 }
 
 .layer-detail-inner p {
   color: var(--text-secondary);
-  margin-bottom: 16px;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   line-height: 1.7;
+  margin-bottom: 16px;
 }
 
 .layer-detail-inner h4 {
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 8px;
-  margin-top: 16px;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+  margin-top: 20px;
 }
 
-.code-block {
-  background: #0d0d14;
+.layer-detail-inner h4:first-child { margin-top: 0; }
+
+.sub-components {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.sub-component {
+  background: rgba(0,0,0,0.25);
   border: 1px solid var(--border-card);
-  border-radius: 8px;
-  padding: 16px;
-  font-family: var(--mono);
-  font-size: 0.82rem;
-  line-height: 1.6;
-  color: var(--text-secondary);
-  overflow-x: auto;
-  white-space: pre;
-  margin-bottom: 12px;
+  border-radius: var(--radius-xs);
+  padding: 12px 14px;
+  transition: all var(--transition);
 }
 
-.code-block .key { color: var(--blue); }
-.code-block .val { color: var(--green); }
-.code-block .comment { color: var(--text-muted); }
+.sub-component:hover {
+  border-color: rgba(59,130,246,0.3);
+  background: rgba(59,130,246,0.04);
+}
+
+.sub-component-name {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.sub-component-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
 
 .connection-label {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 4px 12px;
-  border-radius: 6px;
-  font-size: 0.8rem;
+  border-radius: var(--radius-xs);
+  font-size: 0.78rem;
   font-weight: 500;
   margin-right: 8px;
   margin-bottom: 8px;
 }
 
 .connection-up {
-  background: rgba(59, 130, 246, 0.1);
+  background: var(--blue-dim);
   color: var(--blue);
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  border: 1px solid rgba(59,130,246,0.2);
 }
 
 .connection-down {
-  background: rgba(124, 77, 255, 0.1);
+  background: var(--purple-dim);
   color: var(--purple);
-  border: 1px solid rgba(124, 77, 255, 0.2);
+  border: 1px solid rgba(139,92,246,0.2);
 }
 
-/* ── Request Flow ── */
+/* ═══════════════════════════════════════════════════
+   Section 2: Animated Request Flow
+   ═══════════════════════════════════════════════════ */
 .flow-container {
   background: var(--bg-card);
   border: 1px solid var(--border-card);
   border-radius: var(--radius);
-  padding: 40px 24px;
+  padding: 40px 32px;
   position: relative;
   overflow: hidden;
 }
 
 .flow-path {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   position: relative;
   padding: 20px 0;
   overflow-x: auto;
-  gap: 0;
 }
 
 .flow-node {
@@ -338,42 +717,58 @@ a:hover { color: #60a5fa; }
   text-align: center;
   position: relative;
   z-index: 2;
-  min-width: 80px;
+  min-width: 90px;
   flex-shrink: 0;
 }
 
 .flow-node-circle {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   margin-bottom: 10px;
   border: 2px solid var(--border-card);
   background: var(--bg-body);
-  transition: all var(--transition);
+  transition: all 0.4s ease;
   position: relative;
 }
 
 .flow-node-circle.active {
   border-color: var(--blue);
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 24px var(--blue-glow), 0 0 48px rgba(59,130,246,0.15);
+  background: rgba(59,130,246,0.08);
 }
 
 .flow-node-label {
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--text-primary);
-  max-width: 90px;
+  max-width: 100px;
 }
 
 .flow-node-sublabel {
   font-size: 0.68rem;
   color: var(--text-muted);
   max-width: 100px;
+  margin-top: 2px;
+}
+
+.flow-timing {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--green);
   margin-top: 4px;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: all 0.4s ease;
+}
+
+.flow-timing.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .flow-connector {
@@ -382,9 +777,20 @@ a:hover { color: #60a5fa; }
   background: var(--border-card);
   position: relative;
   min-width: 30px;
-  margin: 0 -4px;
+  margin: 0 -2px;
   align-self: flex-start;
-  margin-top: 34px;
+  margin-top: 36px;
+}
+
+.flow-connector-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--blue), rgba(59,130,246,0.5));
+  transition: width 0.5s ease;
+  box-shadow: 0 0 8px var(--blue-glow);
 }
 
 .flow-connector::after {
@@ -399,148 +805,445 @@ a:hover { color: #60a5fa; }
   border-bottom: 5px solid transparent;
 }
 
-.flow-glow {
+.flow-packet {
   position: absolute;
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   background: var(--blue);
   border-radius: 50%;
-  box-shadow: 0 0 20px var(--blue), 0 0 40px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 20px var(--blue), 0 0 40px rgba(59,130,246,0.4), 0 0 60px rgba(59,130,246,0.2);
   z-index: 10;
   opacity: 0;
   pointer-events: none;
-  transition: none;
+  top: 29px;
+  left: 0;
+}
+
+.flow-packet.visible {
+  opacity: 1;
+}
+
+.flow-packet-trail {
+  position: absolute;
+  width: 30px;
+  height: 6px;
+  background: linear-gradient(90deg, transparent, rgba(59,130,246,0.6));
+  border-radius: 3px;
+  top: 33px;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 9;
+}
+
+.flow-packet-trail.visible {
+  opacity: 1;
+}
+
+.epp-decision {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.epp-decision-card {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  text-align: center;
+  min-width: 150px;
+  transition: all 0.4s ease;
+}
+
+.epp-decision-card.highlight {
+  border-color: var(--blue);
+  background: var(--blue-dim);
+  box-shadow: 0 0 16px rgba(59,130,246,0.15);
+}
+
+.epp-decision-card h4 {
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.epp-decision-card p {
+  font-size: 0.72rem;
+  color: var(--text-muted);
 }
 
 .flow-controls {
   display: flex;
   justify-content: center;
   gap: 12px;
-  margin-top: 32px;
+  margin-top: 28px;
 }
 
-.btn {
-  padding: 10px 24px;
-  border-radius: 8px;
-  font-family: 'Red Hat Text', sans-serif;
-  font-weight: 700;
-  font-size: 0.9rem;
-  border: none;
-  cursor: pointer;
-  transition: all var(--transition);
-}
-
-.btn-primary {
-  background: var(--blue);
-  color: #fff;
-}
-
-.btn-primary:hover {
-  background: #2563eb;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
-}
-
-.btn-secondary {
-  background: transparent;
-  color: var(--text-secondary);
-  border: 1px solid var(--border-card);
-}
-
-.btn-secondary:hover {
-  border-color: var(--text-muted);
-  color: var(--text-primary);
-}
-
-.epp-branch {
-  display: flex;
-  justify-content: center;
-  gap: 24px;
-  margin-top: 24px;
-  flex-wrap: wrap;
-}
-
-.epp-branch-card {
-  background: var(--bg-body);
-  border: 1px solid var(--border-card);
-  border-radius: 8px;
-  padding: 16px 20px;
-  text-align: center;
-  min-width: 160px;
-  transition: all var(--transition);
-}
-
-.epp-branch-card.highlight {
-  border-color: var(--blue);
-  box-shadow: 0 0 16px rgba(59, 130, 246, 0.15);
-}
-
-.epp-branch-card h4 {
-  font-size: 0.85rem;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-}
-
-.epp-branch-card p {
+.flow-speed-label {
   font-size: 0.75rem;
   color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-/* ── Config Panel ── */
-.config-panel {
+/* ═══════════════════════════════════════════════════
+   Section 3: Build Your Deployment Wizard
+   ═══════════════════════════════════════════════════ */
+.wizard-container {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
+  grid-template-columns: 380px 1fr;
+  gap: 24px;
+  min-height: 600px;
 }
 
-@media (max-width: 768px) {
-  .config-panel { grid-template-columns: 1fr; }
+.wizard-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.config-toggles {
+.wizard-step {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.wizard-step-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.wizard-step-number {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.wizard-step-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.wizard-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.wizard-option {
+  padding: 8px 14px;
+  border-radius: var(--radius-xs);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border-card);
+  cursor: pointer;
+  transition: all var(--transition);
+  user-select: none;
+}
+
+.wizard-option:hover {
+  border-color: var(--text-muted);
+  color: var(--text-secondary);
+}
+
+.wizard-option.selected {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: var(--blue-dim);
+}
+
+.wizard-option.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.wizard-option-detail {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.wizard-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wizard-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: all var(--transition);
+  user-select: none;
+}
+
+.wizard-checkbox:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+.wizard-cb-box {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 2px solid var(--border-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+
+.wizard-checkbox.checked .wizard-cb-box {
+  background: var(--blue);
+  border-color: var(--blue);
+}
+
+.wizard-cb-check {
+  display: none;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.wizard-checkbox.checked .wizard-cb-check {
+  display: block;
+}
+
+.wizard-cb-label {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.wizard-output {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.wizard-output-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border-card);
+  background: rgba(0,0,0,0.2);
+}
+
+.wizard-output-tab {
+  padding: 10px 18px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all var(--transition);
+  user-select: none;
+}
+
+.wizard-output-tab:hover {
+  color: var(--text-secondary);
+}
+
+.wizard-output-tab.active {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+}
+
+.wizard-output-content {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+}
+
+.wizard-yaml {
+  display: none;
+}
+
+.wizard-yaml.active {
+  display: block;
+}
+
+.wizard-summary {
+  padding: 20px;
+}
+
+.wizard-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.wizard-summary-card {
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+}
+
+.wizard-summary-card-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.wizard-summary-card-value {
+  font-family: 'Red Hat Display', sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text-primary);
+}
+
+/* ═══════════════════════════════════════════════════
+   Section 4: Interactive YAML Editor
+   ═══════════════════════════════════════════════════ */
+.editor-container {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 24px;
+  min-height: 500px;
+}
+
+.editor-controls {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.toggle-card {
+.editor-control-group {
   background: var(--bg-card);
   border: 1px solid var(--border-card);
   border-radius: var(--radius);
-  padding: 20px 24px;
+  padding: 18px;
+}
+
+.editor-control-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.editor-field {
+  margin-bottom: 14px;
+}
+
+.editor-field:last-child {
+  margin-bottom: 0;
+}
+
+.editor-field-label {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.editor-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.editor-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--border-card);
+  border-radius: 2px;
+  outline: none;
+}
+
+.editor-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--blue);
+  cursor: pointer;
+  box-shadow: 0 0 8px var(--blue-glow);
+}
+
+.editor-slider-value {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--blue);
+  min-width: 36px;
+  text-align: right;
+}
+
+.editor-select {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--radius-xs);
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border-card);
+  color: var(--text-primary);
+  font-family: 'Red Hat Text', sans-serif;
+  font-size: 0.82rem;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--transition);
+}
+
+.editor-select:focus {
+  border-color: var(--blue);
+}
+
+.editor-select option {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.editor-toggle-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  cursor: pointer;
-  transition: all var(--transition);
+  padding: 6px 0;
 }
 
-.toggle-card:hover {
-  border-color: var(--text-muted);
-}
-
-.toggle-card.active {
-  border-color: var(--blue);
-  background: rgba(59, 130, 246, 0.05);
-}
-
-.toggle-info h4 {
-  font-size: 0.95rem;
-  color: var(--text-primary);
-  margin-bottom: 4px;
-}
-
-.toggle-info p {
-  font-size: 0.8rem;
-  color: var(--text-muted);
+.editor-toggle-label {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
 }
 
 .toggle-switch {
-  width: 48px;
-  height: 26px;
+  width: 40px;
+  height: 22px;
   background: var(--border-card);
-  border-radius: 13px;
+  border-radius: 11px;
   position: relative;
+  cursor: pointer;
   transition: background var(--transition);
   flex-shrink: 0;
 }
@@ -548,8 +1251,8 @@ a:hover { color: #60a5fa; }
 .toggle-switch::after {
   content: '';
   position: absolute;
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   background: var(--text-secondary);
   border-radius: 50%;
   top: 3px;
@@ -557,270 +1260,192 @@ a:hover { color: #60a5fa; }
   transition: all var(--transition);
 }
 
-.toggle-card.active .toggle-switch {
+.toggle-switch.on {
   background: var(--blue);
 }
 
-.toggle-card.active .toggle-switch::after {
-  transform: translateX(22px);
+.toggle-switch.on::after {
+  transform: translateX(18px);
   background: #fff;
 }
 
-.config-diagram {
+.editor-yaml-panel {
   background: var(--bg-card);
   border: 1px solid var(--border-card);
   border-radius: var(--radius);
-  padding: 32px;
-  min-height: 360px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  position: relative;
   overflow: hidden;
 }
 
-.mini-arch {
+.editor-yaml-header {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  width: 100%;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border-card);
+  background: rgba(0,0,0,0.2);
 }
 
-.mini-component {
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  text-align: center;
-  border: 1px solid var(--border-card);
-  background: var(--bg-body);
-  color: var(--text-secondary);
-  transition: all var(--transition);
-  width: 100%;
-  max-width: 280px;
-}
-
-.mini-component.active {
-  border-color: var(--blue);
-  color: var(--text-primary);
-  background: rgba(59, 130, 246, 0.08);
-}
-
-.mini-arrow {
+.editor-yaml-title {
+  font-family: var(--mono);
+  font-size: 0.78rem;
   color: var(--text-muted);
-  font-size: 0.9rem;
 }
 
-.mini-pods-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: center;
-  width: 100%;
-  max-width: 360px;
-  transition: all var(--transition);
-}
-
-.mini-pod {
-  padding: 8px 14px;
-  border-radius: 6px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  border: 1px solid var(--border-card);
-  background: var(--bg-body);
-  color: var(--text-muted);
-  transition: all var(--transition);
-  text-align: center;
-}
-
-.mini-pod.prefill {
-  border-color: rgba(124, 77, 255, 0.4);
-  color: var(--purple);
-  background: rgba(124, 77, 255, 0.06);
-}
-
-.mini-pod.decode {
-  border-color: rgba(0, 230, 118, 0.4);
-  color: var(--green);
-  background: rgba(0, 230, 118, 0.06);
-}
-
-.mini-pod.lora-tag {
-  font-size: 0.65rem;
-  padding: 3px 8px;
-  border-color: rgba(255, 171, 0, 0.4);
-  color: var(--amber);
-  background: rgba(255, 171, 0, 0.06);
-}
-
-.mini-hpa {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  border: 1px dashed rgba(0, 230, 118, 0.4);
-  color: var(--green);
-  background: rgba(0, 230, 118, 0.04);
-  transition: all var(--transition);
-}
-
-.mini-cache {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  border: 1px dashed rgba(59, 130, 246, 0.4);
-  color: var(--blue);
-  background: rgba(59, 130, 246, 0.04);
-  transition: all var(--transition);
-}
-
-.config-hidden {
-  opacity: 0;
-  max-height: 0;
-  overflow: hidden;
-  margin: 0;
-  padding: 0;
-  transform: scale(0.95);
-  transition: all var(--transition);
-}
-
-.config-visible {
-  opacity: 1;
-  max-height: 80px;
-  transform: scale(1);
-}
-
-/* ── Timeline ── */
-.timeline {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  position: relative;
-  padding: 40px 0;
-  gap: 0;
-  overflow-x: auto;
-}
-
-.timeline-line {
-  position: absolute;
-  top: 60px;
-  left: 15%;
-  right: 15%;
-  height: 2px;
-  background: var(--border-card);
-}
-
-@media (max-width: 768px) {
-  .timeline-line { left: 5%; right: 5%; }
-}
-
-.timeline-node {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  position: relative;
-  z-index: 2;
+.editor-yaml-content {
   flex: 1;
-  min-width: 140px;
-  max-width: 260px;
+  overflow: auto;
+  padding: 0;
 }
 
-.timeline-dot {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--bg-body);
-  border: 3px solid var(--border-card);
-  margin-bottom: 16px;
-  transition: all var(--transition);
+.editor-highlight-flash {
+  animation: yamlFlash 0.6s ease;
 }
 
-.timeline-node.active .timeline-dot {
-  border-color: var(--blue);
-  background: var(--blue);
-  box-shadow: 0 0 16px rgba(59, 130, 246, 0.5);
+@keyframes yamlFlash {
+  0% { background: rgba(59,130,246,0.15); }
+  100% { background: transparent; }
 }
 
-.timeline-version {
-  font-family: 'Red Hat Display', sans-serif;
-  font-weight: 900;
-  font-size: 1.15rem;
-  color: var(--text-muted);
-  transition: color var(--transition);
+/* ═══════════════════════════════════════════════════
+   Section 5: Version Comparison
+   ═══════════════════════════════════════════════════ */
+.version-container {}
+
+.version-pills {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 32px;
 }
 
-.timeline-node.active .timeline-version {
-  color: var(--text-primary);
+.version-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
 }
 
-.timeline-year {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-}
-
-.timeline-summary {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  text-align: center;
-  max-width: 180px;
-  margin-bottom: 12px;
-}
-
-.timeline-detail {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  width: 100%;
-}
-
-.timeline-node.active .timeline-detail {
-  max-height: 300px;
-}
-
-.timeline-detail-inner {
+.version-arch {
   background: var(--bg-card);
   border: 1px solid var(--border-card);
-  border-radius: 8px;
-  padding: 16px;
-  margin-top: 8px;
+  border-radius: var(--radius);
+  padding: 24px;
 }
 
-.timeline-detail-inner ul {
-  list-style: none;
-  padding: 0;
+.version-arch-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 16px;
 }
 
-.timeline-detail-inner li {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  padding: 4px 0;
-  padding-left: 16px;
-  position: relative;
+.version-component-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.timeline-detail-inner li::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 11px;
+.version-component {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-card);
+  background: rgba(0,0,0,0.2);
+  transition: all var(--transition);
+}
+
+.version-component.added {
+  border-color: rgba(34,197,94,0.4);
+  background: rgba(34,197,94,0.06);
+}
+
+.version-component.removed {
+  border-color: rgba(239,68,68,0.4);
+  background: rgba(239,68,68,0.06);
+  opacity: 0.7;
+  text-decoration: line-through;
+}
+
+.version-component-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  width: 24px;
+  text-align: center;
+}
+
+.version-component-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.version-component-badge {
+  flex-shrink: 0;
+}
+
+.version-changes {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+
+.version-changes-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+}
+
+.version-change-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(30,41,59,0.5);
+}
+
+.version-change-item:last-child {
+  border-bottom: none;
+}
+
+.version-change-marker {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--blue);
+  margin-top: 7px;
+  flex-shrink: 0;
 }
 
-/* ── Hardware Matrix ── */
+.version-change-marker.new { background: var(--green); }
+.version-change-marker.improved { background: var(--blue); }
+.version-change-marker.deprecated { background: var(--red); }
+
+.version-change-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════════════════
+   Section 6: Hardware Matrix
+   ═══════════════════════════════════════════════════ */
+.hw-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.hw-filter-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
 .hw-matrix {
   overflow-x: auto;
   border-radius: var(--radius);
@@ -830,26 +1455,27 @@ a:hover { color: #60a5fa; }
 .hw-matrix table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 700px;
+  min-width: 800px;
 }
 
 .hw-matrix th, .hw-matrix td {
   padding: 14px 16px;
   text-align: center;
   border-bottom: 1px solid var(--border-card);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
 }
 
 .hw-matrix th {
-  background: var(--bg-card);
+  background: rgba(0,0,0,0.3);
   font-family: 'Red Hat Display', sans-serif;
   font-weight: 700;
   color: var(--text-secondary);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   position: sticky;
   top: 0;
+  z-index: 1;
 }
 
 .hw-matrix td:first-child {
@@ -859,15 +1485,26 @@ a:hover { color: #60a5fa; }
   white-space: nowrap;
 }
 
+.hw-matrix tr { transition: all var(--transition); }
+
 .hw-matrix tr:hover {
-  background: rgba(59, 130, 246, 0.03);
+  background: rgba(59,130,246,0.04);
+}
+
+.hw-matrix tr.recommended {
+  background: rgba(59,130,246,0.06);
+  box-shadow: inset 3px 0 0 var(--blue);
+}
+
+.hw-matrix tr.not-recommended {
+  opacity: 0.4;
 }
 
 .hw-matrix tr:last-child td { border-bottom: none; }
 
-.hw-check { color: var(--green); font-weight: 700; font-size: 1.1rem; }
-.hw-partial { color: var(--amber); font-weight: 700; font-size: 0.9rem; }
-.hw-no { color: var(--red); font-weight: 700; font-size: 1rem; }
+.hw-check { color: var(--green); font-weight: 700; }
+.hw-partial { color: var(--amber); font-weight: 700; }
+.hw-no { color: var(--red); font-weight: 700; }
 
 .badge-new {
   display: inline-block;
@@ -882,184 +1519,521 @@ a:hover { color: #60a5fa; }
   text-transform: uppercase;
 }
 
-/* ── Topology ── */
-.topo-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+.hw-recommendation {
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--blue-dim);
+  border: 1px solid rgba(59,130,246,0.3);
+  border-radius: var(--radius);
+  display: none;
 }
 
-@media (max-width: 768px) {
-  .topo-cards { grid-template-columns: 1fr; }
+.hw-recommendation.visible {
+  display: block;
 }
 
-.topo-card {
+.hw-recommendation h4 {
+  font-size: 0.9rem;
+  color: var(--blue);
+  margin-bottom: 8px;
+}
+
+.hw-recommendation p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════════════
+   Section 7: Deployment Topology
+   ═══════════════════════════════════════════════════ */
+.topo-selector {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
+.topo-display {
   background: var(--bg-card);
   border: 1px solid var(--border-card);
   border-radius: var(--radius);
-  padding: 28px 24px;
-  cursor: pointer;
-  transition: all var(--transition);
-  overflow: hidden;
+  padding: 32px;
+  min-height: 400px;
 }
 
-.topo-card:hover {
-  border-color: var(--text-muted);
+.topo-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.topo-desc {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 32px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.topo-visual {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+  min-height: 200px;
+}
+
+.topo-node {
+  border: 2px solid var(--border-card);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+  min-width: 120px;
+  background: rgba(0,0,0,0.2);
+  transition: all var(--transition);
+  position: relative;
+  cursor: pointer;
+}
+
+.topo-node:hover {
+  border-color: var(--blue);
   transform: translateY(-2px);
 }
 
-.topo-card.active {
+.topo-node.highlight {
   border-color: var(--blue);
-  box-shadow: 0 4px 24px rgba(59, 130, 246, 0.12);
+  box-shadow: 0 0 16px var(--blue-glow);
 }
 
-.topo-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.topo-icon {
+.topo-node-icon {
   font-size: 1.5rem;
+  margin-bottom: 6px;
 }
 
-.topo-header h3 {
-  font-size: 1.1rem;
+.topo-node-label {
+  font-size: 0.78rem;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
-.topo-card p {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  margin-bottom: 8px;
-}
-
-.topo-specs {
-  font-size: 0.8rem;
+.topo-node-sub {
+  font-size: 0.68rem;
   color: var(--text-muted);
 }
 
-.topo-detail {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.topo-card.active .topo-detail {
-  max-height: 500px;
-}
-
-.topo-detail-inner {
-  padding-top: 20px;
-  margin-top: 20px;
-  border-top: 1px solid var(--border-card);
-}
-
-.topo-detail-inner h4 {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 8px;
-  margin-top: 12px;
-}
-
-.topo-detail-inner h4:first-child { margin-top: 0; }
-
-.topo-detail-inner p {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-}
-
-.topo-detail-inner ul {
-  list-style: none;
-  padding: 0;
-}
-
-.topo-detail-inner li {
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-  padding: 3px 0 3px 16px;
-  position: relative;
-}
-
-.topo-detail-inner li::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 10px;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--blue);
-}
-
-.topo-diagram {
+.topo-node-gpus {
   display: flex;
-  align-items: center;
+  gap: 4px;
   justify-content: center;
-  gap: 12px;
-  margin-top: 16px;
+  margin-top: 8px;
   flex-wrap: wrap;
 }
 
-.topo-box {
-  border: 1px solid var(--border-card);
-  border-radius: 8px;
-  padding: 12px 16px;
-  text-align: center;
-  min-width: 80px;
+.topo-gpu-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--green);
+  transition: all var(--transition);
 }
 
-.topo-box .box-label {
-  font-size: 0.7rem;
+.topo-gpu-dot.prefill { background: var(--purple); }
+.topo-gpu-dot.decode { background: var(--green); }
+.topo-gpu-dot.idle { background: var(--border-card); }
+
+.topo-arrow {
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  animation: topoArrowPulse 2s ease-in-out infinite;
+}
+
+@keyframes topoArrowPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; color: var(--blue); }
+}
+
+.topo-cluster-box {
+  border: 2px dashed var(--border-card);
+  border-radius: var(--radius);
+  padding: 20px;
+  text-align: center;
+  min-width: 160px;
+}
+
+.topo-cluster-label {
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
 }
 
-.topo-box .box-icon {
-  font-size: 1.2rem;
-  margin-bottom: 4px;
-}
-
-.topo-connector-h {
-  color: var(--text-muted);
-  font-size: 1.2rem;
-}
-
-.topo-box-cluster {
-  border: 2px dashed var(--border-card);
-  border-radius: 10px;
-  padding: 16px;
+.topo-cluster-nodes {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   justify-content: center;
 }
 
-.topo-box-cluster .cluster-label {
-  width: 100%;
-  text-align: center;
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-
-.topo-box-sm {
+.topo-mini-node {
+  width: 40px;
+  height: 40px;
   border: 1px solid var(--border-card);
-  border-radius: 6px;
-  padding: 6px 10px;
+  border-radius: var(--radius-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 0.65rem;
   font-weight: 700;
   color: var(--text-muted);
+  transition: all var(--transition);
+  cursor: pointer;
 }
 
-/* ── Footer ── */
+.topo-mini-node:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.topo-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-card);
+}
+
+.topo-detail-card {
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--border-card);
+}
+
+.topo-detail-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.topo-detail-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* ═══════════════════════════════════════════════════
+   Section 8: GPU Topology
+   ═══════════════════════════════════════════════════ */
+.gpu-topo-container {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+  padding: 32px;
+}
+
+.gpu-topo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.gpu-topo-visual {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.numa-node {
+  border: 2px solid var(--border-card);
+  border-radius: var(--radius);
+  padding: 20px;
+  min-width: 240px;
+  background: rgba(0,0,0,0.15);
+}
+
+.numa-label {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.numa-cpu {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  padding: 6px;
+  border: 1px dashed var(--border-card);
+  border-radius: var(--radius-xs);
+}
+
+.numa-gpus {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.gpu-chip {
+  border: 2px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+}
+
+.gpu-chip:hover, .gpu-chip.selected {
+  border-color: var(--blue);
+  box-shadow: 0 0 12px var(--blue-glow);
+}
+
+.gpu-chip-label {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.gpu-chip-mem {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.gpu-chip-bar {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--border-card);
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.gpu-chip-bar-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 2px;
+  transition: width var(--transition);
+}
+
+.nvlink-connections {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin: 8px 0;
+}
+
+.nvlink-line {
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--cyan), var(--blue));
+  border-radius: 1px;
+  position: relative;
+}
+
+.nvlink-label {
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--cyan);
+  margin: 4px 0;
+}
+
+.pcie-connection {
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--amber);
+  margin: 12px 0 4px;
+  padding: 4px;
+  border-top: 1px dashed var(--amber);
+}
+
+.gpu-detail-panel {
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: none;
+}
+
+.gpu-detail-panel.visible {
+  display: block;
+}
+
+.gpu-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.gpu-detail-item {
+  padding: 10px;
+  border-radius: var(--radius-xs);
+  background: rgba(0,0,0,0.2);
+}
+
+.gpu-detail-item-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.gpu-detail-item-value {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  color: var(--text-primary);
+}
+
+/* ═══════════════════════════════════════════════════
+   Section 9: Cost Estimator
+   ═══════════════════════════════════════════════════ */
+.cost-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.cost-inputs {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+
+.cost-field {
+  margin-bottom: 18px;
+}
+
+.cost-field:last-child {
+  margin-bottom: 0;
+}
+
+.cost-field-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.cost-output {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.cost-total {
+  text-align: center;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.cost-total-label {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.cost-total-value {
+  font-family: 'Red Hat Display', sans-serif;
+  font-weight: 900;
+  font-size: 2.5rem;
+  color: var(--text-primary);
+}
+
+.cost-total-period {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.cost-breakdown {
+  flex: 1;
+}
+
+.cost-breakdown-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.cost-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(30,41,59,0.5);
+  font-size: 0.85rem;
+}
+
+.cost-line:last-child {
+  border-bottom: none;
+}
+
+.cost-line-label {
+  color: var(--text-secondary);
+}
+
+.cost-line-value {
+  font-family: var(--mono);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.cost-bar {
+  height: 8px;
+  background: var(--border-card);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 16px;
+}
+
+.cost-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width var(--transition);
+}
+
+.cost-notes {
+  margin-top: 16px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ═══════════════════════════════════════════════════
+   Footer
+   ═══════════════════════════════════════════════════ */
 .site-footer {
   border-top: 1px solid var(--border-card);
-  padding: 40px 24px;
+  padding: 48px 32px;
   text-align: center;
 }
 
@@ -1085,37 +2059,66 @@ a:hover { color: #60a5fa; }
   font-weight: 500;
 }
 
-.footer-links a:hover {
-  color: var(--text-primary);
-}
+.footer-links a:hover { color: var(--text-primary); }
 
 .footer-content-number {
   font-size: 0.8rem;
   color: var(--text-muted);
 }
 
-/* ── Responsive ── */
-@media (max-width: 600px) {
+/* ═══════════════════════════════════════════════════
+   Responsive
+   ═══════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .wizard-container { grid-template-columns: 1fr; }
+  .editor-container { grid-template-columns: 1fr; }
+  .cost-container { grid-template-columns: 1fr; }
+  .version-content { grid-template-columns: 1fr; }
+  .grid-2 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
   .site-header { padding: 0 16px; }
-  .header-left .subtitle { display: none; }
-  .header-divider { display: none; }
+  .nav-tabs { padding: 0 16px; }
   .main-content { padding: 32px 16px 60px; }
   .section { margin-bottom: 56px; }
-  .section-title { font-size: 1.4rem; }
-  .layer-bar { padding: 12px 16px; }
-  .flow-path { padding: 20px 10px; }
-  .timeline { flex-direction: column; align-items: stretch; }
-  .timeline-line { display: none; }
-  .timeline-node { flex-direction: row; flex-wrap: wrap; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--border-card); }
-  .timeline-dot { margin-bottom: 0; }
-  .timeline-summary { text-align: left; }
-  .timeline-detail { width: 100%; }
+  .hero h1 { font-size: 1.75rem; }
+  .header-left .subtitle { display: none; }
+  .header-divider { display: none; }
+  .grid-3 { grid-template-columns: 1fr; }
+  .sub-components { grid-template-columns: 1fr; }
+  .gpu-topo-visual { flex-direction: column; align-items: center; }
+  .hero-stats { gap: 24px; }
+}
+
+@media (max-width: 480px) {
+  .flow-path { padding: 10px 0; }
+  .flow-node { min-width: 60px; }
+  .flow-node-label { font-size: 0.65rem; }
+  .wizard-options { flex-direction: column; }
+}
+
+/* ═══════════════════════════════════════════════════
+   Animations
+   ═══════════════════════════════════════════════════ */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes packetGlow {
+  0%, 100% { box-shadow: 0 0 15px var(--blue), 0 0 30px rgba(59,130,246,0.3); }
+  50% { box-shadow: 0 0 25px var(--blue), 0 0 50px rgba(59,130,246,0.5); }
+}
+
+.fade-in {
+  animation: fadeInUp 0.4s ease forwards;
 }
 </style>
 </head>
 <body>
 
-<!-- ══════════ Header ══════════ -->
+<!-- Header -->
 <header class="site-header">
   <div class="header-left">
     <img src="https://llm-d.ai/img/llm-d-icon.png" alt="llm-d">
@@ -1129,94 +2132,206 @@ a:hover { color: #60a5fa; }
   </nav>
 </header>
 
-<!-- ══════════ Main ══════════ -->
+<!-- Navigation Tabs -->
+<nav class="nav-tabs" id="navTabs">
+  <div class="nav-tab active" data-target="architecture">Architecture</div>
+  <div class="nav-tab" data-target="request-flow">Request Flow</div>
+  <div class="nav-tab" data-target="wizard">Deployment Wizard</div>
+  <div class="nav-tab" data-target="yaml-editor">YAML Editor</div>
+  <div class="nav-tab" data-target="versions">Version Comparison</div>
+  <div class="nav-tab" data-target="hardware">Hardware Matrix</div>
+  <div class="nav-tab" data-target="topology">Deployment Topology</div>
+  <div class="nav-tab" data-target="gpu-topology">GPU Topology</div>
+  <div class="nav-tab" data-target="cost">Cost Estimator</div>
+</nav>
+
+<!-- Main Content -->
 <main class="main-content">
 
   <!-- Hero -->
   <section class="hero">
     <h1>OpenShift AI Integration</h1>
-    <p>Explore the full architecture of llm-d running on Red Hat OpenShift AI. Click any layer to dive in, watch requests flow through the stack, and configure features interactively.</p>
+    <p>Enterprise deployment planner for llm-d on Red Hat OpenShift AI. Explore the architecture, build your deployment configuration, estimate costs, and plan GPU topology for production LLM inference.</p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-value">7</div>
+        <div class="hero-stat-label">Architecture Layers</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">5</div>
+        <div class="hero-stat-label">GPU Families</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">3</div>
+        <div class="hero-stat-label">RHAI Versions</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-value">5</div>
+        <div class="hero-stat-label">Model Sizes</div>
+      </div>
+    </div>
   </section>
 
-  <!-- ──── Section 1: Architecture Stack ──── -->
+  <!-- Section 1: Architecture -->
   <section class="section" id="architecture">
-    <h2 class="section-title">Layered Architecture</h2>
-    <p class="section-subtitle">Click any layer to explore its role in the inference stack</p>
-
+    <div class="section-header">
+      <div class="section-label">Section 01</div>
+      <h2 class="section-title">Layered Architecture</h2>
+      <p class="section-subtitle">Click any layer to expand its internal components, configuration details, and connection topology</p>
+    </div>
     <div class="arch-stack" id="archStack"></div>
   </section>
 
-  <!-- ──── Section 2: Request Flow ──── -->
+  <!-- Section 2: Request Flow -->
   <section class="section" id="request-flow">
-    <h2 class="section-title">Request Flow Visualization</h2>
-    <p class="section-subtitle">Watch an inference request travel through the stack in real time</p>
-
+    <div class="section-header">
+      <div class="section-label">Section 02</div>
+      <h2 class="section-title">Animated Request Flow</h2>
+      <p class="section-subtitle">Watch a glowing packet travel through the full inference stack with timing annotations at each hop</p>
+    </div>
     <div class="flow-container">
-      <div class="flow-path" id="flowPath">
-        <div class="flow-glow" id="flowGlow"></div>
-      </div>
-
-      <div class="epp-branch" id="eppBranch">
-        <div class="epp-branch-card" id="epp-kv">
+      <div class="flow-path" id="flowPath"></div>
+      <div class="epp-decision" id="eppDecision">
+        <div class="epp-decision-card" id="epp-kv">
           <h4>KV-Cache Affinity</h4>
           <p>Route to pod with cached prefix</p>
         </div>
-        <div class="epp-branch-card" id="epp-lora">
-          <h4>LoRA Adapter</h4>
+        <div class="epp-decision-card" id="epp-lora">
+          <h4>LoRA Adapter Match</h4>
           <p>Route to pod with loaded adapter</p>
         </div>
-        <div class="epp-branch-card" id="epp-lb">
+        <div class="epp-decision-card" id="epp-lb">
           <h4>Load Balancing</h4>
           <p>Route to least-loaded pod</p>
         </div>
+        <div class="epp-decision-card" id="epp-prefix">
+          <h4>Prefix Cache Hit</h4>
+          <p>Reuse cached KV blocks</p>
+        </div>
       </div>
-
       <div class="flow-controls">
         <button class="btn btn-primary" id="btnReplay">Replay Animation</button>
+        <div class="flow-speed-label">
+          Speed:
+          <div class="pill-group">
+            <div class="pill" data-speed="slow">0.5x</div>
+            <div class="pill active" data-speed="normal">1x</div>
+            <div class="pill" data-speed="fast">2x</div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- ──── Section 3: Configuration Panel ──── -->
-  <section class="section" id="configuration">
-    <h2 class="section-title">Interactive Configuration</h2>
-    <p class="section-subtitle">Toggle features to see how the architecture changes</p>
-
-    <div class="config-panel">
-      <div class="config-toggles" id="configToggles"></div>
-      <div class="config-diagram" id="configDiagram"></div>
+  <!-- Section 3: Build Your Deployment Wizard -->
+  <section class="section" id="wizard">
+    <div class="section-header">
+      <div class="section-label">Section 03</div>
+      <h2 class="section-title">Build Your Deployment</h2>
+      <p class="section-subtitle">Select your model, hardware, and features to generate production-ready YAML configurations</p>
+    </div>
+    <div class="wizard-container">
+      <div class="wizard-sidebar" id="wizardSidebar"></div>
+      <div class="wizard-output" id="wizardOutput"></div>
     </div>
   </section>
 
-  <!-- ──── Section 4: Version Timeline ──── -->
-  <section class="section" id="timeline">
-    <h2 class="section-title">Release Timeline</h2>
-    <p class="section-subtitle">Red Hat AI release progression with llm-d integration milestones</p>
-
-    <div class="timeline" id="timeline">
-      <div class="timeline-line"></div>
+  <!-- Section 4: Interactive YAML Editor -->
+  <section class="section" id="yaml-editor">
+    <div class="section-header">
+      <div class="section-label">Section 04</div>
+      <h2 class="section-title">Interactive YAML Editor</h2>
+      <p class="section-subtitle">Adjust LLMInferenceService spec fields via controls and see the YAML and architecture diagram update in real time</p>
+    </div>
+    <div class="editor-container">
+      <div class="editor-controls" id="editorControls"></div>
+      <div class="editor-yaml-panel" id="editorYamlPanel">
+        <div class="editor-yaml-header">
+          <span class="editor-yaml-title">llminferenceservice.yaml</span>
+          <button class="copy-btn" onclick="copyEditorYaml()">Copy</button>
+        </div>
+        <div class="editor-yaml-content">
+          <div class="code-block" id="editorYamlCode" style="border:none;border-radius:0;min-height:400px;"></div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- ──── Section 5: Hardware Compatibility ──── -->
+  <!-- Section 5: Version Comparison -->
+  <section class="section" id="versions">
+    <div class="section-header">
+      <div class="section-label">Section 05</div>
+      <h2 class="section-title">Red Hat AI Version Comparison</h2>
+      <p class="section-subtitle">Toggle between versions to see what changes in the architecture -- added components in green, removed in red</p>
+    </div>
+    <div class="version-container">
+      <div class="version-pills">
+        <div class="pill-group" id="versionPills"></div>
+      </div>
+      <div class="version-content" id="versionContent"></div>
+    </div>
+  </section>
+
+  <!-- Section 6: Hardware Matrix -->
   <section class="section" id="hardware">
-    <h2 class="section-title">Hardware Compatibility Matrix</h2>
-    <p class="section-subtitle">GPU support for llm-d features on OpenShift AI</p>
-
+    <div class="section-header">
+      <div class="section-label">Section 06</div>
+      <h2 class="section-title">Hardware Compatibility Matrix</h2>
+      <p class="section-subtitle">Interactive filtering and recommendation engine -- select your model size to see which GPUs fit best</p>
+    </div>
+    <div class="hw-filter-bar" id="hwFilterBar"></div>
     <div class="hw-matrix" id="hwMatrix"></div>
+    <div class="hw-recommendation" id="hwRecommendation"></div>
   </section>
 
-  <!-- ──── Section 6: Deployment Topology ──── -->
+  <!-- Section 7: Deployment Topology -->
   <section class="section" id="topology">
-    <h2 class="section-title">Deployment Topology</h2>
-    <p class="section-subtitle">Choose the right deployment model for your workload</p>
+    <div class="section-header">
+      <div class="section-label">Section 07</div>
+      <h2 class="section-title">Deployment Topology Visualizer</h2>
+      <p class="section-subtitle">Explore single-node, multi-node, and multi-cluster topologies with animated data flow diagrams</p>
+    </div>
+    <div class="topo-selector">
+      <div class="pill-group" id="topoPills"></div>
+    </div>
+    <div class="topo-display" id="topoDisplay"></div>
+  </section>
 
-    <div class="topo-cards" id="topoCards"></div>
+  <!-- Section 8: GPU Topology -->
+  <section class="section" id="gpu-topology">
+    <div class="section-header">
+      <div class="section-label">Section 08</div>
+      <h2 class="section-title">GPU Topology Awareness</h2>
+      <p class="section-subtitle">Visualize NUMA nodes, NVLink interconnects, and PCIe topology -- click any GPU for details</p>
+    </div>
+    <div class="gpu-topo-container">
+      <div class="gpu-topo-header">
+        <div>
+          <span class="editor-control-label" style="margin-bottom:0">Node Configuration</span>
+        </div>
+        <div class="pill-group" id="gpuTopoPills"></div>
+      </div>
+      <div id="gpuTopoVisual"></div>
+      <div class="gpu-detail-panel" id="gpuDetailPanel"></div>
+    </div>
+  </section>
+
+  <!-- Section 9: Cost Estimator -->
+  <section class="section" id="cost">
+    <div class="section-header">
+      <div class="section-label">Section 09</div>
+      <h2 class="section-title">Cost Estimator</h2>
+      <p class="section-subtitle">Estimate monthly infrastructure costs for your llm-d deployment on OpenShift</p>
+    </div>
+    <div class="cost-container">
+      <div class="cost-inputs" id="costInputs"></div>
+      <div class="cost-output" id="costOutput"></div>
+    </div>
   </section>
 
 </main>
 
-<!-- ══════════ Footer ══════════ -->
+<!-- Footer -->
 <footer class="site-footer">
   <p class="footer-hub">Part of the llm-d Content Hub</p>
   <div class="footer-links">
@@ -1229,83 +2344,155 @@ a:hover { color: #60a5fa; }
 
 <script>
 /* ═══════════════════════════════════════════════════
-   Section 1 — Layered Architecture
+   Navigation
+   ═══════════════════════════════════════════════════ */
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    this.classList.add('active');
+    const target = document.getElementById(this.dataset.target);
+    if (target) target.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      const tab = document.querySelector(`.nav-tab[data-target="${entry.target.id}"]`);
+      if (tab) tab.classList.add('active');
+    }
+  });
+}, { rootMargin: '-150px 0px -60% 0px' });
+
+document.querySelectorAll('.section').forEach(s => observer.observe(s));
+
+
+/* ═══════════════════════════════════════════════════
+   Section 1: Architecture Stack
    ═══════════════════════════════════════════════════ */
 const layers = [
   {
-    num: 7,
-    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+    num: 7, cls: 'l7',
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
     name: 'User / Application',
-    subtitle: 'Sends inference requests',
-    color: 'linear-gradient(135deg, #3b82f6 0%, #4f8ff7 100%)',
-    description: 'Applications and users submit inference requests to the OpenShift AI serving endpoint. Requests can be standard OpenAI-compatible chat completions, embeddings, or custom model endpoints. Client SDKs, curl, or any HTTP client can target the exposed Route.',
-    config: '<span class="key">POST</span> /v1/chat/completions\n<span class="key">Authorization</span>: Bearer &lt;token&gt;\n<span class="key">Content-Type</span>: application/json\n{\n  <span class="key">"model"</span>: <span class="val">"meta-llama/Llama-3.1-70B-Instruct"</span>,\n  <span class="key">"messages"</span>: [{<span class="key">"role"</span>: <span class="val">"user"</span>, <span class="key">"content"</span>: <span class="val">"Hello"</span>}],\n  <span class="key">"stream"</span>: <span class="val">true</span>\n}',
+    subtitle: 'Sends inference requests via OpenAI-compatible API',
+    description: 'Applications submit inference requests to the OpenShift AI serving endpoint. Requests can be standard OpenAI-compatible chat completions, embeddings, or custom model endpoints. Supports streaming (SSE), function calling, and batch inference patterns.',
+    subComponents: [
+      { name: 'HTTP Client', desc: 'curl, SDK, or custom app sending REST requests' },
+      { name: 'Auth Token', desc: 'OAuth2 / ServiceAccount bearer token for RBAC' },
+      { name: 'OpenAI SDK', desc: 'Compatible with openai Python/JS client libraries' },
+      { name: 'Streaming (SSE)', desc: 'Server-sent events for token-by-token streaming' }
+    ],
+    config: '<span class="c"># OpenAI-compatible request</span>\n<span class="k">POST</span> /v1/chat/completions\n<span class="k">Authorization</span>: Bearer &lt;token&gt;\n<span class="k">Content-Type</span>: application/json\n\n{\n  <span class="k">"model"</span>: <span class="v">"meta-llama/Llama-3.1-70B-Instruct"</span>,\n  <span class="k">"messages"</span>: [{<span class="k">"role"</span>: <span class="v">"user"</span>, <span class="k">"content"</span>: <span class="v">"Hello"</span>}],\n  <span class="k">"stream"</span>: <span class="v">true</span>,\n  <span class="k">"max_tokens"</span>: <span class="n">2048</span>\n}',
     connectUp: null,
-    connectDown: 'Sends HTTPS requests to OpenShift Route'
+    connectDown: 'HTTPS request to OpenShift Route endpoint'
   },
   {
-    num: 6,
-    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>',
+    num: 6, cls: 'l6',
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>',
     name: 'OpenShift Route / Ingress',
-    subtitle: 'Traffic entry point',
-    color: 'linear-gradient(135deg, #4570e6 0%, #5a4fd6 100%)',
-    description: 'OpenShift Routes expose the inference endpoint externally with TLS termination. The Gateway API (Envoy-based) handles traffic management, load balancing, and routing rules. Supports HTTP/2 and gRPC for streaming inference responses.',
-    config: '<span class="key">apiVersion</span>: route.openshift.io/v1\n<span class="key">kind</span>: Route\n<span class="key">metadata</span>:\n  <span class="key">name</span>: <span class="val">llm-inference-gateway</span>\n<span class="key">spec</span>:\n  <span class="key">tls</span>:\n    <span class="key">termination</span>: <span class="val">edge</span>\n  <span class="key">to</span>:\n    <span class="key">kind</span>: <span class="val">Service</span>\n    <span class="key">name</span>: <span class="val">llm-gateway-svc</span>',
+    subtitle: 'TLS termination, traffic entry point',
+    description: 'OpenShift Routes expose inference endpoints externally with TLS termination. The Route connects to the Gateway API service which handles traffic management and routing rules. Supports edge, re-encrypt, and passthrough TLS modes. HTTP/2 and gRPC for streaming responses.',
+    subComponents: [
+      { name: 'TLS Termination', desc: 'Edge or re-encrypt TLS with auto-cert rotation' },
+      { name: 'HAProxy Ingress', desc: 'High-performance ingress controller routing' },
+      { name: 'Rate Limiting', desc: 'Per-client rate limits to protect backend' },
+      { name: 'Health Probes', desc: 'Liveness and readiness probe endpoints' }
+    ],
+    config: '<span class="k">apiVersion</span>: route.openshift.io/v1\n<span class="k">kind</span>: Route\n<span class="k">metadata</span>:\n  <span class="k">name</span>: <span class="v">llm-inference-gateway</span>\n  <span class="k">annotations</span>:\n    <span class="k">haproxy.router.openshift.io/timeout</span>: <span class="v">300s</span>\n<span class="k">spec</span>:\n  <span class="k">tls</span>:\n    <span class="k">termination</span>: <span class="v">edge</span>\n  <span class="k">to</span>:\n    <span class="k">kind</span>: <span class="v">Service</span>\n    <span class="k">name</span>: <span class="v">llm-gateway-istio</span>',
     connectUp: 'Receives external HTTPS traffic from clients',
-    connectDown: 'Forwards requests to Red Hat AI Operator managed services'
+    connectDown: 'Forwards requests to Gateway API (Envoy)'
   },
   {
-    num: 5,
-    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
+    num: 5, cls: 'l5',
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>',
     name: 'Red Hat AI Operator',
-    subtitle: 'Manages the inference stack',
-    color: 'linear-gradient(135deg, #4e5ed6 0%, #6550c8 100%)',
-    description: 'The Red Hat AI Operator (part of Red Hat OpenShift AI) automates the deployment and lifecycle management of the entire inference stack. It reconciles LLMInferenceService custom resources and provisions the Gateway, EPP, and vLLM pods with the correct configuration.',
-    config: '<span class="comment"># Operator watches for LLMInferenceService CRDs</span>\n<span class="comment"># and automatically provisions:</span>\n<span class="comment">#   - Gateway API resources</span>\n<span class="comment">#   - EPP deployment</span>\n<span class="comment">#   - vLLM StatefulSets</span>\n<span class="comment">#   - HPA policies</span>\n<span class="comment">#   - PersistentVolumeClaims for model storage</span>',
+    subtitle: 'Manages the full inference lifecycle',
+    description: 'The Red Hat AI Operator (part of OpenShift AI) automates deployment and lifecycle management of the inference stack. It reconciles LLMInferenceService custom resources and provisions the Gateway, EPP, vLLM pods, HPA, and PVCs. Handles rolling updates, model version promotions, and resource quotas.',
+    subComponents: [
+      { name: 'CRD Controller', desc: 'Watches LLMInferenceService resources for changes' },
+      { name: 'Provisioner', desc: 'Creates Gateway, EPP, vLLM StatefulSets' },
+      { name: 'HPA Manager', desc: 'Configures autoscaling policies per model' },
+      { name: 'Model Registry', desc: 'Tracks model versions and storage locations' },
+      { name: 'Upgrade Controller', desc: 'Rolling updates with zero-downtime model swaps' },
+      { name: 'Resource Quotas', desc: 'Enforces GPU and memory limits per namespace' }
+    ],
+    config: '<span class="c"># Operator watches for LLMInferenceService CRDs</span>\n<span class="c"># and automatically provisions:</span>\n<span class="c">#   - Gateway API resources (Envoy)</span>\n<span class="c">#   - EPP deployment (sidecar)</span>\n<span class="c">#   - vLLM StatefulSets</span>\n<span class="c">#   - HPA policies (GPU-aware)</span>\n<span class="c">#   - PVCs for model storage</span>\n<span class="c">#   - ServiceMonitor for Prometheus</span>',
     connectUp: 'Configures Route and Gateway API resources',
-    connectDown: 'Creates and manages KServe + LLMInferenceService resources'
+    connectDown: 'Creates and manages KServe + LLMInferenceService'
   },
   {
-    num: 4,
-    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+    num: 4, cls: 'l4',
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
     name: 'KServe + LLMInferenceService CRD',
-    subtitle: 'Model serving orchestration',
-    color: 'linear-gradient(135deg, #5a4cc6 0%, #6d42b8 100%)',
-    description: 'LLMInferenceService is a Kubernetes Custom Resource Definition purpose-built for LLM inference. It extends KServe with LLM-specific fields like model parallelism, disaggregated serving modes, and LoRA adapter configuration. A single CRD declaratively defines the entire serving topology.',
-    config: '<span class="key">apiVersion</span>: inference.llm-d.ai/v1alpha1\n<span class="key">kind</span>: LLMInferenceService\n<span class="key">metadata</span>:\n  <span class="key">name</span>: <span class="val">llama-70b</span>\n<span class="key">spec</span>:\n  <span class="key">modelName</span>: <span class="val">meta-llama/Llama-3.1-70B-Instruct</span>\n  <span class="key">tensorParallelism</span>: <span class="val">4</span>\n  <span class="key">disaggregatedServing</span>:\n    <span class="key">enabled</span>: <span class="val">true</span>\n    <span class="key">prefillReplicas</span>: <span class="val">2</span>\n    <span class="key">decodeReplicas</span>: <span class="val">4</span>',
+    subtitle: 'Declarative model serving orchestration',
+    description: 'LLMInferenceService is a Kubernetes Custom Resource Definition purpose-built for LLM inference. It extends KServe with LLM-specific fields: tensor parallelism, disaggregated serving modes, LoRA adapter configuration, prefix caching policy, and GPU scheduling constraints. A single CRD defines the entire serving topology.',
+    subComponents: [
+      { name: 'ModelSpec', desc: 'Model ID, source, quantization, max context length' },
+      { name: 'DisaggSpec', desc: 'Prefill/decode replica counts and routing policy' },
+      { name: 'LoRASpec', desc: 'Adapter list, max loaded adapters, routing weight' },
+      { name: 'ScalingSpec', desc: 'Min/max replicas, target GPU utilization, cooldown' },
+      { name: 'InferencePool', desc: 'Groups pods into a logical pool for EPP routing' },
+      { name: 'GatewaySpec', desc: 'Gateway class, listeners, HTTPRoute references' }
+    ],
+    config: '<span class="k">apiVersion</span>: inference.llm-d.ai/v1alpha1\n<span class="k">kind</span>: LLMInferenceService\n<span class="k">metadata</span>:\n  <span class="k">name</span>: <span class="v">llama-70b</span>\n<span class="k">spec</span>:\n  <span class="k">modelName</span>: <span class="v">meta-llama/Llama-3.1-70B-Instruct</span>\n  <span class="k">tensorParallelism</span>: <span class="n">4</span>\n  <span class="k">maxModelLen</span>: <span class="n">32768</span>\n  <span class="k">disaggregatedServing</span>:\n    <span class="k">enabled</span>: <span class="v">true</span>\n    <span class="k">prefillReplicas</span>: <span class="n">2</span>\n    <span class="k">decodeReplicas</span>: <span class="n">4</span>\n  <span class="k">scaling</span>:\n    <span class="k">minReplicas</span>: <span class="n">2</span>\n    <span class="k">maxReplicas</span>: <span class="n">8</span>\n    <span class="k">targetGPUUtilization</span>: <span class="n">80</span>',
     connectUp: 'Managed by the Red Hat AI Operator',
     connectDown: 'Defines EPP routing policy and vLLM pod topology'
   },
   {
-    num: 3,
-    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 12l-4-4-4 4"/><path d="M12 16V8"/></svg>',
+    num: 3, cls: 'l3',
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 12l-4-4-4 4"/><path d="M12 16V8"/></svg>',
     name: 'Endpoint Picker (EPP)',
-    subtitle: "llm-d's intelligent request routing",
-    color: 'linear-gradient(135deg, #6840b6 0%, #7a38a8 100%)',
-    description: 'The Endpoint Picker is the brain of llm-d. It receives incoming requests and makes intelligent routing decisions based on real-time pod metrics: KV-cache occupancy, loaded LoRA adapters, prefix cache hits, and queue depth. EPP runs as a sidecar to the Gateway and communicates over gRPC.',
-    config: '<span class="comment"># EPP routing strategies:</span>\n<span class="key">routing</span>:\n  <span class="key">strategy</span>: <span class="val">prefix-aware</span>     <span class="comment"># or: load-balanced, lora-affinity</span>\n  <span class="key">kvCacheThreshold</span>: <span class="val">0.85</span>     <span class="comment"># shed load above 85% KV-cache</span>\n  <span class="key">prefixMatchWeight</span>: <span class="val">0.6</span>     <span class="comment"># weight for prefix cache hit</span>\n  <span class="key">queueDepthWeight</span>: <span class="val">0.3</span>      <span class="comment"># weight for queue depth</span>\n  <span class="key">loraAffinityWeight</span>: <span class="val">0.1</span>    <span class="comment"># weight for LoRA adapter match</span>',
-    connectUp: 'Receives requests from Gateway API',
-    connectDown: 'Routes to optimal vLLM pod based on metrics'
+    subtitle: "llm-d's intelligent request routing engine",
+    description: 'The Endpoint Picker is the brain of llm-d. It receives incoming requests from the Gateway and makes intelligent routing decisions based on real-time pod metrics: KV-cache occupancy, loaded LoRA adapters, prefix cache hits, queue depth, and model-specific scoring weights. EPP runs as an ext-proc filter sidecar to the Envoy gateway.',
+    subComponents: [
+      { name: 'Scoring Engine', desc: 'Multi-factor weighted scoring for pod selection' },
+      { name: 'Metrics Collector', desc: 'Polls vLLM pods for real-time KV-cache, queue depth' },
+      { name: 'Prefix Matcher', desc: 'Hash-based prefix matching for KV-cache affinity' },
+      { name: 'LoRA Router', desc: 'Routes to pods with matching loaded adapters' },
+      { name: 'Load Shedder', desc: 'Rejects requests when all pods exceed threshold' },
+      { name: 'gRPC Interface', desc: 'ext-proc protocol to Envoy gateway sidecar' }
+    ],
+    config: '<span class="c"># EPP scoring configuration</span>\n<span class="k">routing</span>:\n  <span class="k">strategy</span>: <span class="v">prefix-aware</span>\n  <span class="k">kvCacheThreshold</span>: <span class="n">0.85</span>      <span class="c"># shed load above 85%</span>\n  <span class="k">prefixMatchWeight</span>: <span class="n">0.6</span>      <span class="c"># prefix cache hit weight</span>\n  <span class="k">queueDepthWeight</span>: <span class="n">0.3</span>       <span class="c"># queue depth weight</span>\n  <span class="k">loraAffinityWeight</span>: <span class="n">0.1</span>     <span class="c"># LoRA adapter match weight</span>\n  <span class="k">metricsInterval</span>: <span class="v">500ms</span>       <span class="c"># poll interval</span>',
+    connectUp: 'Receives requests from Gateway API (Envoy)',
+    connectDown: 'Routes to optimal vLLM pod based on scoring'
   },
   {
-    num: 2,
-    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="2" x2="9" y2="4"/><line x1="15" y1="2" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="22"/><line x1="15" y1="20" x2="15" y2="22"/><line x1="20" y1="9" x2="22" y2="9"/><line x1="20" y1="15" x2="22" y2="15"/><line x1="2" y1="9" x2="4" y2="9"/><line x1="2" y1="15" x2="4" y2="15"/></svg>',
+    num: 2, cls: 'l2',
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="2" x2="9" y2="4"/><line x1="15" y1="2" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="22"/><line x1="15" y1="20" x2="15" y2="22"/><line x1="20" y1="9" x2="22" y2="9"/><line x1="20" y1="15" x2="22" y2="15"/><line x1="2" y1="9" x2="4" y2="9"/><line x1="2" y1="15" x2="4" y2="15"/></svg>',
     name: 'vLLM Inference Pods',
-    subtitle: 'The model serving engine',
-    color: 'linear-gradient(135deg, #7a36a4 0%, #8a2e98 100%)',
-    description: 'vLLM pods run the actual model inference with PagedAttention, continuous batching, and speculative decoding. In disaggregated mode, separate prefill and decode pods handle different phases of generation. Each pod reports real-time metrics to EPP via a sidecar.',
-    config: '<span class="key">containers</span>:\n  - <span class="key">name</span>: <span class="val">vllm</span>\n    <span class="key">image</span>: <span class="val">quay.io/redhat-ai/vllm:latest</span>\n    <span class="key">args</span>:\n      - <span class="val">--model=meta-llama/Llama-3.1-70B-Instruct</span>\n      - <span class="val">--tensor-parallel-size=4</span>\n      - <span class="val">--enable-prefix-caching</span>\n      - <span class="val">--max-model-len=32768</span>\n      - <span class="val">--gpu-memory-utilization=0.92</span>\n    <span class="key">resources</span>:\n      <span class="key">limits</span>:\n        <span class="key">nvidia.com/gpu</span>: <span class="val">4</span>',
+    subtitle: 'High-performance model serving with PagedAttention',
+    description: 'vLLM pods run actual model inference using PagedAttention for efficient KV-cache memory management, continuous batching for high throughput, and speculative decoding for faster generation. In disaggregated mode, separate prefill and decode pods handle different phases. Each pod reports real-time metrics to EPP.',
+    subComponents: [
+      { name: 'PagedAttention', desc: 'Efficient KV-cache memory with paging (like OS virtual memory)' },
+      { name: 'Continuous Batching', desc: 'Dynamic batching of concurrent requests for throughput' },
+      { name: 'Prefix Caching', desc: 'Share computed KV blocks across requests with common prefixes' },
+      { name: 'Speculative Decoding', desc: 'Draft model predicts tokens, verified in parallel' },
+      { name: 'LoRA Hot-Loading', desc: 'Load/unload LoRA adapters on-the-fly without restart' },
+      { name: 'Metrics Sidecar', desc: 'Reports KV-cache %, queue depth, latency to EPP' },
+      { name: 'FP8 Quantization', desc: 'Reduce memory footprint with 8-bit floating point' },
+      { name: 'Tensor Parallelism', desc: 'Split model across multiple GPUs via NVLink' }
+    ],
+    config: '<span class="k">containers</span>:\n  - <span class="k">name</span>: <span class="v">vllm</span>\n    <span class="k">image</span>: <span class="v">quay.io/redhat-ai/vllm:latest</span>\n    <span class="k">args</span>:\n      - <span class="v">--model=meta-llama/Llama-3.1-70B-Instruct</span>\n      - <span class="v">--tensor-parallel-size=4</span>\n      - <span class="v">--enable-prefix-caching</span>\n      - <span class="v">--max-model-len=32768</span>\n      - <span class="v">--gpu-memory-utilization=0.92</span>\n      - <span class="v">--dtype=auto</span>\n      - <span class="v">--enforce-eager=false</span>\n    <span class="k">resources</span>:\n      <span class="k">limits</span>:\n        <span class="k">nvidia.com/gpu</span>: <span class="n">4</span>\n        <span class="k">memory</span>: <span class="v">256Gi</span>',
     connectUp: 'Receives routed requests from EPP',
     connectDown: 'Executes model inference on GPU hardware'
   },
   {
-    num: 1,
-    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="22" height="12" rx="2"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="10" y1="10" x2="10" y2="14"/><line x1="14" y1="10" x2="14" y2="14"/><line x1="18" y1="10" x2="18" y2="14"/></svg>',
+    num: 1, cls: 'l1',
+    icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="22" height="12" rx="2"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="10" y1="10" x2="10" y2="14"/><line x1="14" y1="10" x2="14" y2="14"/><line x1="18" y1="10" x2="18" y2="14"/></svg>',
     name: 'GPU Hardware',
-    subtitle: 'NVIDIA H100 / H200 / B200, AMD MI300X',
-    color: 'linear-gradient(135deg, #8a2c96 0%, #7c4dff 100%)',
-    description: 'The compute foundation. NVIDIA H100 SXM GPUs with NVLink for high-bandwidth tensor parallelism, H200 with extended HBM3e memory for larger context windows, B200 (Blackwell) for next-gen performance, and AMD MI300X for ROCm-based deployments. GPU topology and interconnect matter for disaggregated serving.',
-    config: '<span class="comment"># Typical GPU node configuration:</span>\n<span class="key">node</span>:\n  <span class="key">gpu</span>: <span class="val">NVIDIA H100 SXM 80GB</span>\n  <span class="key">count</span>: <span class="val">8</span>\n  <span class="key">interconnect</span>: <span class="val">NVLink 4.0 (900 GB/s)</span>\n  <span class="key">memory</span>: <span class="val">640 GB HBM3</span>\n  <span class="key">cpu</span>: <span class="val">2x Intel Xeon 8480+</span>\n  <span class="key">system_ram</span>: <span class="val">2 TB DDR5</span>',
+    subtitle: 'NVIDIA H100/H200/B200, AMD MI300X',
+    description: 'The compute foundation. NVIDIA H100 SXM GPUs with NVLink 4.0 for high-bandwidth tensor parallelism. H200 with 141GB HBM3e for larger context windows. B200 (Blackwell) for next-gen performance. AMD MI300X with 192GB HBM3 for ROCm-based deployments. GPU topology, NUMA affinity, and interconnect bandwidth directly impact disaggregated serving performance.',
+    subComponents: [
+      { name: 'H100 SXM 80GB', desc: 'NVLink 4.0 (900 GB/s), 80GB HBM3, 3958 TFLOPS FP8' },
+      { name: 'H100 PCIe 80GB', desc: 'PCIe Gen5 x16, 80GB HBM3, lower interconnect BW' },
+      { name: 'H200 SXM 141GB', desc: '141GB HBM3e, 4.8 TB/s bandwidth, larger context' },
+      { name: 'B200 SXM 192GB', desc: 'Blackwell arch, 192GB HBM3e, 2x H100 perf' },
+      { name: 'MI300X 192GB', desc: 'AMD CDNA3, 192GB HBM3, ROCm stack, 5.3 TB/s BW' },
+      { name: 'NVSwitch / NVLink', desc: 'GPU-to-GPU interconnect for tensor parallelism' }
+    ],
+    config: '<span class="c"># 8x H100 SXM GPU node configuration</span>\n<span class="k">node</span>:\n  <span class="k">gpu</span>: <span class="v">NVIDIA H100 SXM 80GB</span>\n  <span class="k">count</span>: <span class="n">8</span>\n  <span class="k">interconnect</span>: <span class="v">NVLink 4.0 (900 GB/s bidirectional)</span>\n  <span class="k">hbm</span>: <span class="v">640 GB HBM3 total</span>\n  <span class="k">cpu</span>: <span class="v">2x Intel Xeon 8480+ (112 cores)</span>\n  <span class="k">system_ram</span>: <span class="v">2 TB DDR5-4800</span>\n  <span class="k">network</span>: <span class="v">8x ConnectX-7 400GbE</span>\n  <span class="k">nvswitch</span>: <span class="v">4x NVSwitch (all-to-all)</span>',
     connectUp: 'Provides compute for vLLM model execution',
     connectDown: null
   }
@@ -1314,9 +2501,9 @@ const layers = [
 function renderArchStack() {
   const container = document.getElementById('archStack');
   container.innerHTML = layers.map(l => `
-    <div class="arch-layer" data-layer="${l.num}" style="background: ${l.color}" onclick="toggleLayer(this)">
+    <div class="arch-layer" data-layer="${l.num}" onclick="toggleLayer(this)">
       <div class="layer-bar">
-        <span class="layer-number">L${l.num}</span>
+        <span class="layer-badge ${l.cls}">L${l.num}</span>
         <span class="layer-icon">${l.icon}</span>
         <div class="layer-info">
           <div class="layer-name">${l.name}</div>
@@ -1327,12 +2514,21 @@ function renderArchStack() {
       <div class="layer-detail">
         <div class="layer-detail-inner">
           <p>${l.description}</p>
+          <h4>Internal Components</h4>
+          <div class="sub-components">
+            ${l.subComponents.map(sc => `
+              <div class="sub-component">
+                <div class="sub-component-name">${sc.name}</div>
+                <div class="sub-component-desc">${sc.desc}</div>
+              </div>
+            `).join('')}
+          </div>
           <h4>Configuration</h4>
           <div class="code-block">${l.config}</div>
           <h4>Connections</h4>
           <div>
-            ${l.connectUp ? `<span class="connection-label connection-up">&#8593; Above: ${l.connectUp}</span>` : ''}
-            ${l.connectDown ? `<span class="connection-label connection-down">&#8595; Below: ${l.connectDown}</span>` : ''}
+            ${l.connectUp ? `<span class="connection-label connection-up">&#8593; ${l.connectUp}</span>` : ''}
+            ${l.connectDown ? `<span class="connection-label connection-down">&#8595; ${l.connectDown}</span>` : ''}
           </div>
         </div>
       </div>
@@ -1350,35 +2546,35 @@ renderArchStack();
 
 
 /* ═══════════════════════════════════════════════════
-   Section 2 — Request Flow Visualization
+   Section 2: Animated Request Flow
    ═══════════════════════════════════════════════════ */
 const flowSteps = [
-  { icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', label: 'User', sub: 'Send request' },
-  { icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>', label: 'OCP Route', sub: 'TLS termination' },
-  { icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 3v18"/></svg>', label: 'Gateway API', sub: 'Traffic mgmt' },
-  { icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 12l-4-4-4 4"/><path d="M12 16V8"/></svg>', label: 'EPP', sub: 'Routing decision' },
-  { icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>', label: 'vLLM Pod', sub: 'Model inference' },
-  { icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="6" width="22" height="12" rx="2"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="10" y1="10" x2="10" y2="14"/><line x1="14" y1="10" x2="14" y2="14"/><line x1="18" y1="10" x2="18" y2="14"/></svg>', label: 'GPU', sub: 'Compute' },
-  { icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>', label: 'Response', sub: 'Stream back' }
+  { icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', label: 'User', sub: 'Send request', timing: '' },
+  { icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>', label: 'OCP Route', sub: 'TLS termination', timing: '+2ms TLS' },
+  { icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 3v18"/></svg>', label: 'Gateway', sub: 'Envoy proxy', timing: '+1ms route' },
+  { icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 12l-4-4-4 4"/><path d="M12 16V8"/></svg>', label: 'EPP', sub: 'Pod selection', timing: '+0.5ms score' },
+  { icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>', label: 'vLLM Pod', sub: 'Inference engine', timing: '+3ms queue' },
+  { icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="6" width="22" height="12" rx="2"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="10" y1="10" x2="10" y2="14"/><line x1="14" y1="10" x2="14" y2="14"/><line x1="18" y1="10" x2="18" y2="14"/></svg>', label: 'GPU', sub: 'H100 SXM', timing: '+15ms infer' },
+  { icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>', label: 'Response', sub: 'Stream tokens', timing: '~22ms TTFT' }
 ];
+
+let flowSpeed = 600;
 
 function renderFlowPath() {
   const container = document.getElementById('flowPath');
-  const glow = document.getElementById('flowGlow');
-  let html = '';
+  let html = '<div class="flow-packet" id="flowPacket"></div><div class="flow-packet-trail" id="flowTrail"></div>';
   flowSteps.forEach((step, i) => {
     html += `<div class="flow-node" id="flowNode${i}">
       <div class="flow-node-circle">${step.icon}</div>
       <span class="flow-node-label">${step.label}</span>
       <span class="flow-node-sublabel">${step.sub}</span>
+      <span class="flow-timing" id="flowTiming${i}">${step.timing}</span>
     </div>`;
     if (i < flowSteps.length - 1) {
-      html += `<div class="flow-connector"></div>`;
+      html += `<div class="flow-connector"><div class="flow-connector-fill" id="connFill${i}"></div></div>`;
     }
   });
-  glow.remove();
   container.innerHTML = html;
-  container.appendChild(glow);
 }
 
 let flowAnimating = false;
@@ -1388,46 +2584,70 @@ function animateFlow() {
   if (flowAnimating) return;
   flowAnimating = true;
 
-  const glow = document.getElementById('flowGlow');
+  const packet = document.getElementById('flowPacket');
+  const trail = document.getElementById('flowTrail');
   const nodes = document.querySelectorAll('.flow-node-circle');
-  const branches = document.querySelectorAll('.epp-branch-card');
+  const timings = document.querySelectorAll('.flow-timing');
+  const connFills = document.querySelectorAll('.flow-connector-fill');
+  const branches = document.querySelectorAll('.epp-decision-card');
 
   nodes.forEach(n => n.classList.remove('active'));
+  timings.forEach(t => t.classList.remove('visible'));
+  connFills.forEach(c => c.style.width = '0%');
   branches.forEach(b => b.classList.remove('highlight'));
-  glow.style.opacity = '1';
+  packet.classList.add('visible');
+  trail.classList.add('visible');
+  packet.style.animation = 'packetGlow 1s ease-in-out infinite';
 
   const nodeEls = document.querySelectorAll('#flowPath .flow-node');
-  const connEls = document.querySelectorAll('#flowPath .flow-connector');
   const container = document.getElementById('flowPath');
-
   let step = 0;
-  const totalSteps = flowSteps.length;
+
+  function positionPacket(nodeEl) {
+    const circle = nodeEl.querySelector('.flow-node-circle');
+    const rect = circle.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    const x = rect.left - containerRect.left + rect.width / 2 - 7;
+    const y = rect.top - containerRect.top + rect.height / 2 - 7;
+    packet.style.left = x + 'px';
+    packet.style.top = y + 'px';
+    trail.style.left = (x - 25) + 'px';
+    trail.style.top = (y + 4) + 'px';
+  }
 
   function animateStep() {
-    if (step >= totalSteps) {
-      glow.style.opacity = '0';
-      flowAnimating = false;
+    if (step >= flowSteps.length) {
+      setTimeout(() => {
+        packet.classList.remove('visible');
+        trail.classList.remove('visible');
+        flowAnimating = false;
+      }, 400);
       return;
     }
 
     const nodeEl = nodeEls[step];
     const circle = nodeEl.querySelector('.flow-node-circle');
-    const rect = circle.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
 
-    const targetX = rect.left - containerRect.left + rect.width / 2 - 6;
-    const targetY = rect.top - containerRect.top + rect.height / 2 - 6;
+    packet.style.transition = step === 0 ? 'none' : `left ${flowSpeed * 0.8}ms ease, top ${flowSpeed * 0.8}ms ease`;
 
-    glow.style.transform = `translate(${targetX}px, ${targetY}px)`;
+    positionPacket(nodeEl);
     circle.classList.add('active');
 
+    const timing = document.getElementById('flowTiming' + step);
+    if (timing) timing.classList.add('visible');
+
+    if (step > 0) {
+      const fill = document.getElementById('connFill' + (step - 1));
+      if (fill) fill.style.width = '100%';
+    }
+
     if (step === 3) {
-      const branchIdx = Math.floor(Math.random() * 3);
+      const branchIdx = Math.floor(Math.random() * 4);
       branches[branchIdx].classList.add('highlight');
     }
 
     step++;
-    flowAnimId = setTimeout(animateStep, 600);
+    flowAnimId = setTimeout(animateStep, flowSpeed);
   }
 
   animateStep();
@@ -1438,231 +2658,695 @@ renderFlowPath();
 document.getElementById('btnReplay').addEventListener('click', function() {
   if (flowAnimId) clearTimeout(flowAnimId);
   flowAnimating = false;
-  const glow = document.getElementById('flowGlow');
-  glow.style.opacity = '0';
-  glow.style.transform = 'translate(0, 0)';
-  document.querySelectorAll('.flow-node-circle').forEach(n => n.classList.remove('active'));
-  document.querySelectorAll('.epp-branch-card').forEach(b => b.classList.remove('highlight'));
   setTimeout(animateFlow, 100);
 });
 
-setTimeout(animateFlow, 1200);
+document.querySelectorAll('[data-speed]').forEach(pill => {
+  pill.addEventListener('click', function() {
+    document.querySelectorAll('[data-speed]').forEach(p => p.classList.remove('active'));
+    this.classList.add('active');
+    const speeds = { slow: 1200, normal: 600, fast: 300 };
+    flowSpeed = speeds[this.dataset.speed] || 600;
+  });
+});
+
+setTimeout(animateFlow, 1500);
 
 
 /* ═══════════════════════════════════════════════════
-   Section 3 — Configuration Panel
+   Section 3: Build Your Deployment Wizard
    ═══════════════════════════════════════════════════ */
-const configFeatures = [
-  { id: 'disagg', label: 'Disaggregated Prefill/Decode', desc: 'Separate prefill and decode pods for optimized throughput' },
-  { id: 'hpa', label: 'Autoscaling (HPA)', desc: 'Horizontal Pod Autoscaler monitors GPU utilization' },
-  { id: 'lora', label: 'LoRA Multi-Adapter', desc: 'Multiple LoRA adapters loaded per pod with routing' },
-  { id: 'prefix', label: 'Prefix Caching', desc: 'Share KV-cache across requests with common prefixes' }
+const wizardState = {
+  modelSize: '70B',
+  gpuType: 'H100 SXM',
+  features: { disagg: false, lora: false, prefix: true, autoscale: true }
+};
+
+const modelSizes = [
+  { id: '7B', label: '7B', detail: '~14 GB', gpus: 1 },
+  { id: '13B', label: '13B', detail: '~26 GB', gpus: 1 },
+  { id: '34B', label: '34B', detail: '~68 GB', gpus: 2 },
+  { id: '70B', label: '70B', detail: '~140 GB', gpus: 4 },
+  { id: '405B', label: '405B', detail: '~810 GB', gpus: 8 }
 ];
 
-const configState = { disagg: false, hpa: false, lora: false, prefix: false };
+const gpuTypes = [
+  { id: 'H100 SXM', label: 'H100 SXM', mem: '80 GB', vendor: 'nvidia' },
+  { id: 'H100 PCIe', label: 'H100 PCIe', mem: '80 GB', vendor: 'nvidia' },
+  { id: 'H200', label: 'H200', mem: '141 GB', vendor: 'nvidia' },
+  { id: 'B200', label: 'B200', mem: '192 GB', vendor: 'nvidia' },
+  { id: 'MI300X', label: 'MI300X', mem: '192 GB', vendor: 'amd' }
+];
 
-function renderConfigToggles() {
-  const container = document.getElementById('configToggles');
-  container.innerHTML = configFeatures.map(f => `
-    <div class="toggle-card${configState[f.id] ? ' active' : ''}" data-feature="${f.id}" onclick="toggleConfig('${f.id}')">
-      <div class="toggle-info">
-        <h4>${f.label}</h4>
-        <p>${f.desc}</p>
+const featureOptions = [
+  { id: 'disagg', label: 'Disaggregated P/D', desc: 'Separate prefill and decode pods' },
+  { id: 'lora', label: 'LoRA Multi-Adapter', desc: 'Multiple fine-tuned adapters per pod' },
+  { id: 'prefix', label: 'Prefix Caching', desc: 'Cache common prompt prefixes' },
+  { id: 'autoscale', label: 'Autoscaling (HPA)', desc: 'GPU-aware horizontal pod autoscaling' }
+];
+
+function renderWizard() {
+  const sidebar = document.getElementById('wizardSidebar');
+  sidebar.innerHTML = `
+    <div class="wizard-step">
+      <div class="wizard-step-header">
+        <span class="wizard-step-number">1</span>
+        <span class="wizard-step-title">Model Size</span>
       </div>
-      <div class="toggle-switch"></div>
+      <div class="wizard-options">
+        ${modelSizes.map(m => `
+          <div class="wizard-option ${wizardState.modelSize === m.id ? 'selected' : ''}" onclick="setWizardModel('${m.id}')">
+            <div>${m.label}</div>
+            <div class="wizard-option-detail">${m.detail} / ${m.gpus} GPU${m.gpus > 1 ? 's' : ''}</div>
+          </div>
+        `).join('')}
+      </div>
     </div>
-  `).join('');
+    <div class="wizard-step">
+      <div class="wizard-step-header">
+        <span class="wizard-step-number">2</span>
+        <span class="wizard-step-title">GPU Type</span>
+      </div>
+      <div class="wizard-options">
+        ${gpuTypes.map(g => `
+          <div class="wizard-option ${wizardState.gpuType === g.id ? 'selected' : ''}" onclick="setWizardGPU('${g.id}')">
+            <div>${g.label}</div>
+            <div class="wizard-option-detail">${g.mem}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="wizard-step">
+      <div class="wizard-step-header">
+        <span class="wizard-step-number">3</span>
+        <span class="wizard-step-title">Features</span>
+      </div>
+      <div class="wizard-checkboxes">
+        ${featureOptions.map(f => `
+          <div class="wizard-checkbox ${wizardState.features[f.id] ? 'checked' : ''}" onclick="toggleWizardFeature('${f.id}')">
+            <div class="wizard-cb-box"><span class="wizard-cb-check">&#10003;</span></div>
+            <div>
+              <div class="wizard-cb-label">${f.label}</div>
+              <div style="font-size:0.72rem;color:var(--text-muted)">${f.desc}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  renderWizardOutput();
 }
 
-function toggleConfig(id) {
-  configState[id] = !configState[id];
-  renderConfigToggles();
-  renderConfigDiagram();
-}
+function setWizardModel(id) { wizardState.modelSize = id; renderWizard(); }
+function setWizardGPU(id) { wizardState.gpuType = id; renderWizard(); }
+function toggleWizardFeature(id) { wizardState.features[id] = !wizardState.features[id]; renderWizard(); }
 
-function renderConfigDiagram() {
-  const d = document.getElementById('configDiagram');
-  const s = configState;
+let wizardTab = 'llminferenceservice';
 
-  const podsHTML = s.disagg
-    ? `<div class="mini-pods-row">
-        <div class="mini-pod prefill">Prefill Pod 1</div>
-        <div class="mini-pod prefill">Prefill Pod 2</div>
-        <div class="mini-pod decode">Decode Pod 1</div>
-        <div class="mini-pod decode">Decode Pod 2</div>
-        <div class="mini-pod decode">Decode Pod 3</div>
-        <div class="mini-pod decode">Decode Pod 4</div>
-       </div>`
-    : `<div class="mini-pods-row">
-        <div class="mini-pod">vLLM Pod 1</div>
-        <div class="mini-pod">vLLM Pod 2</div>
-        <div class="mini-pod">vLLM Pod 3</div>
-        <div class="mini-pod">vLLM Pod 4</div>
-       </div>`;
+function renderWizardOutput() {
+  const output = document.getElementById('wizardOutput');
+  const m = modelSizes.find(m => m.id === wizardState.modelSize);
+  const g = gpuTypes.find(g => g.id === wizardState.gpuType);
+  const s = wizardState.features;
 
-  const hpaHTML = s.hpa
-    ? `<div class="mini-hpa config-visible">
-        <span>&#8645;</span> HPA Controller &mdash; scaling pods based on GPU utilization
-       </div>`
-    : `<div class="mini-hpa config-hidden">
-        <span>&#8645;</span> HPA Controller
-       </div>`;
+  const supportsDisagg = g.id !== 'H100 PCIe';
+  const supportsFP8 = g.vendor === 'nvidia';
+  const tp = m.gpus;
+  const modelId = { '7B': 'meta-llama/Llama-3.1-8B-Instruct', '13B': 'meta-llama/Llama-2-13b-chat-hf', '34B': 'codellama/CodeLlama-34b-Instruct-hf', '70B': 'meta-llama/Llama-3.1-70B-Instruct', '405B': 'meta-llama/Llama-3.1-405B-Instruct' }[wizardState.modelSize];
+  const maxLen = { '7B': 8192, '13B': 4096, '34B': 16384, '70B': 32768, '405B': 16384 }[wizardState.modelSize];
 
-  const loraHTML = s.lora
-    ? `<div class="mini-pods-row config-visible" style="margin-top:4px">
-        <div class="mini-pod lora-tag">adapter: sql-expert</div>
-        <div class="mini-pod lora-tag">adapter: code-gen</div>
-        <div class="mini-pod lora-tag">adapter: summarize</div>
-       </div>`
-    : `<div class="mini-pods-row config-hidden" style="margin-top:4px">
-        <div class="mini-pod lora-tag">adapter: sql-expert</div>
-       </div>`;
+  const llmisYaml = generateLLMISYaml(modelId, tp, maxLen, m, g, s, supportsDisagg, supportsFP8);
+  const poolYaml = generatePoolYaml(m, g, s, supportsDisagg);
+  const gwYaml = generateGatewayYaml();
 
-  const cacheHTML = s.prefix
-    ? `<div class="mini-cache config-visible">
-        <span>&#9881;</span> Prefix Cache: shared KV blocks across pods
-       </div>`
-    : `<div class="mini-cache config-hidden">
-        <span>&#9881;</span> Prefix Cache
-       </div>`;
+  const tabs = [
+    { id: 'llminferenceservice', label: 'LLMInferenceService' },
+    { id: 'inferencepool', label: 'InferencePool' },
+    { id: 'gateway', label: 'Gateway' },
+    { id: 'summary', label: 'Summary' }
+  ];
 
-  d.innerHTML = `
-    <div class="mini-arch">
-      <div class="mini-component active">Gateway + EPP</div>
-      <div class="mini-arrow">&#8595;</div>
-      ${cacheHTML}
-      ${podsHTML}
-      ${loraHTML}
-      ${hpaHTML}
-      <div class="mini-arrow">&#8595;</div>
-      <div class="mini-component">GPU Hardware</div>
+  const yamlMap = { llminferenceservice: llmisYaml, inferencepool: poolYaml, gateway: gwYaml };
+
+  output.innerHTML = `
+    <div class="wizard-output-tabs">
+      ${tabs.map(t => `<div class="wizard-output-tab ${wizardTab === t.id ? 'active' : ''}" onclick="setWizardTab('${t.id}')">${t.label}</div>`).join('')}
+    </div>
+    <div class="wizard-output-content">
+      ${tabs.filter(t => t.id !== 'summary').map(t => `
+        <div class="wizard-yaml ${wizardTab === t.id ? 'active' : ''}">
+          <div class="code-header">
+            <span class="code-header-label">${t.label.toLowerCase()}.yaml</span>
+            <button class="copy-btn" onclick="copyYaml(this, '${t.id}')">Copy</button>
+          </div>
+          <div class="code-block" style="border-top:none;border-radius:0 0 var(--radius-sm) var(--radius-sm);min-height:380px" id="yaml-${t.id}">${yamlMap[t.id]}</div>
+        </div>
+      `).join('')}
+      <div class="wizard-yaml ${wizardTab === 'summary' ? 'active' : ''}">
+        <div class="wizard-summary">
+          <div class="wizard-summary-grid">
+            <div class="wizard-summary-card">
+              <div class="wizard-summary-card-label">Model</div>
+              <div class="wizard-summary-card-value">${wizardState.modelSize}</div>
+            </div>
+            <div class="wizard-summary-card">
+              <div class="wizard-summary-card-label">GPU</div>
+              <div class="wizard-summary-card-value">${g.label}</div>
+            </div>
+            <div class="wizard-summary-card">
+              <div class="wizard-summary-card-label">GPUs / Pod</div>
+              <div class="wizard-summary-card-value">${tp}</div>
+            </div>
+            <div class="wizard-summary-card">
+              <div class="wizard-summary-card-label">Total GPUs</div>
+              <div class="wizard-summary-card-value">${s.disagg && supportsDisagg ? tp * 6 : tp * 4}</div>
+            </div>
+            <div class="wizard-summary-card">
+              <div class="wizard-summary-card-label">Max Context</div>
+              <div class="wizard-summary-card-value">${(maxLen/1024).toFixed(0)}K</div>
+            </div>
+            <div class="wizard-summary-card">
+              <div class="wizard-summary-card-label">Architecture</div>
+              <div class="wizard-summary-card-value">${s.disagg && supportsDisagg ? 'Disaggregated' : 'Unified'}</div>
+            </div>
+          </div>
+          <h4 style="font-size:0.82rem;color:var(--text-muted);margin-bottom:8px">Active Features</h4>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            ${Object.entries(s).filter(([,v]) => v).map(([k]) => {
+              const f = featureOptions.find(f => f.id === k);
+              return `<span class="badge badge-blue">${f ? f.label : k}</span>`;
+            }).join('')}
+            ${supportsFP8 ? '<span class="badge badge-purple">FP8 Quantization</span>' : ''}
+          </div>
+        </div>
+      </div>
     </div>
   `;
 }
 
-renderConfigToggles();
-renderConfigDiagram();
+function setWizardTab(id) { wizardTab = id; renderWizardOutput(); }
+
+function generateLLMISYaml(modelId, tp, maxLen, m, g, s, supportsDisagg, supportsFP8) {
+  let yaml = `<span class="k">apiVersion</span>: inference.llm-d.ai/v1alpha1\n`;
+  yaml += `<span class="k">kind</span>: LLMInferenceService\n`;
+  yaml += `<span class="k">metadata</span>:\n`;
+  yaml += `  <span class="k">name</span>: <span class="v">${wizardState.modelSize.toLowerCase()}-serving</span>\n`;
+  yaml += `  <span class="k">namespace</span>: <span class="v">llm-inference</span>\n`;
+  yaml += `<span class="k">spec</span>:\n`;
+  yaml += `  <span class="k">modelName</span>: <span class="v">${modelId}</span>\n`;
+  yaml += `  <span class="k">tensorParallelism</span>: <span class="n">${tp}</span>\n`;
+  yaml += `  <span class="k">maxModelLen</span>: <span class="n">${maxLen}</span>\n`;
+  yaml += `  <span class="k">gpuMemoryUtilization</span>: <span class="n">0.92</span>\n`;
+
+  if (supportsFP8) {
+    yaml += `  <span class="k">quantization</span>: <span class="v">fp8</span>\n`;
+  }
+
+  if (g.vendor === 'nvidia') {
+    yaml += `  <span class="k">accelerator</span>:\n`;
+    yaml += `    <span class="k">type</span>: <span class="v">nvidia.com/gpu</span>\n`;
+    yaml += `    <span class="k">count</span>: <span class="n">${tp}</span>\n`;
+  } else {
+    yaml += `  <span class="k">accelerator</span>:\n`;
+    yaml += `    <span class="k">type</span>: <span class="v">amd.com/gpu</span>\n`;
+    yaml += `    <span class="k">count</span>: <span class="n">${tp}</span>\n`;
+  }
+
+  if (s.disagg && supportsDisagg) {
+    yaml += `  <span class="k">disaggregatedServing</span>:\n`;
+    yaml += `    <span class="k">enabled</span>: <span class="v">true</span>\n`;
+    yaml += `    <span class="k">prefillReplicas</span>: <span class="n">2</span>\n`;
+    yaml += `    <span class="k">decodeReplicas</span>: <span class="n">4</span>\n`;
+    yaml += `    <span class="k">transferProtocol</span>: <span class="v">nixl</span>\n`;
+  }
+
+  if (s.lora) {
+    yaml += `  <span class="k">loraAdapters</span>:\n`;
+    yaml += `    <span class="k">enabled</span>: <span class="v">true</span>\n`;
+    yaml += `    <span class="k">maxLoadedAdapters</span>: <span class="n">4</span>\n`;
+    yaml += `    <span class="k">adapters</span>:\n`;
+    yaml += `      - <span class="k">name</span>: <span class="v">sql-expert</span>\n`;
+    yaml += `        <span class="k">source</span>: <span class="v">s3://adapters/sql-expert</span>\n`;
+    yaml += `      - <span class="k">name</span>: <span class="v">code-gen</span>\n`;
+    yaml += `        <span class="k">source</span>: <span class="v">s3://adapters/code-gen</span>\n`;
+  }
+
+  if (s.prefix) {
+    yaml += `  <span class="k">prefixCaching</span>:\n`;
+    yaml += `    <span class="k">enabled</span>: <span class="v">true</span>\n`;
+  }
+
+  if (s.autoscale) {
+    yaml += `  <span class="k">scaling</span>:\n`;
+    yaml += `    <span class="k">minReplicas</span>: <span class="n">2</span>\n`;
+    yaml += `    <span class="k">maxReplicas</span>: <span class="n">8</span>\n`;
+    yaml += `    <span class="k">targetGPUUtilization</span>: <span class="n">80</span>\n`;
+    yaml += `    <span class="k">scaleDownDelay</span>: <span class="v">5m</span>\n`;
+  }
+
+  return yaml;
+}
+
+function generatePoolYaml(m, g, s, supportsDisagg) {
+  let yaml = `<span class="k">apiVersion</span>: inference.networking.x-k8s.io/v1alpha2\n`;
+  yaml += `<span class="k">kind</span>: InferencePool\n`;
+  yaml += `<span class="k">metadata</span>:\n`;
+  yaml += `  <span class="k">name</span>: <span class="v">${wizardState.modelSize.toLowerCase()}-pool</span>\n`;
+  yaml += `  <span class="k">namespace</span>: <span class="v">llm-inference</span>\n`;
+  yaml += `<span class="k">spec</span>:\n`;
+  yaml += `  <span class="k">targetPortNumber</span>: <span class="n">8000</span>\n`;
+  yaml += `  <span class="k">selector</span>:\n`;
+  yaml += `    <span class="k">app</span>: <span class="v">${wizardState.modelSize.toLowerCase()}-serving</span>\n`;
+  yaml += `  <span class="k">endpointPickerConfig</span>:\n`;
+  yaml += `    <span class="k">extensionRef</span>:\n`;
+  yaml += `      <span class="k">name</span>: <span class="v">${wizardState.modelSize.toLowerCase()}-epp</span>\n`;
+  yaml += `      <span class="k">group</span>: <span class="v">""</span>\n`;
+  yaml += `      <span class="k">kind</span>: <span class="v">Service</span>\n`;
+
+  return yaml;
+}
+
+function generateGatewayYaml() {
+  let yaml = `<span class="k">apiVersion</span>: gateway.networking.k8s.io/v1\n`;
+  yaml += `<span class="k">kind</span>: Gateway\n`;
+  yaml += `<span class="k">metadata</span>:\n`;
+  yaml += `  <span class="k">name</span>: <span class="v">llm-gateway</span>\n`;
+  yaml += `  <span class="k">namespace</span>: <span class="v">llm-inference</span>\n`;
+  yaml += `<span class="k">spec</span>:\n`;
+  yaml += `  <span class="k">gatewayClassName</span>: <span class="v">istio</span>\n`;
+  yaml += `  <span class="k">listeners</span>:\n`;
+  yaml += `    - <span class="k">name</span>: <span class="v">http</span>\n`;
+  yaml += `      <span class="k">protocol</span>: <span class="v">HTTP</span>\n`;
+  yaml += `      <span class="k">port</span>: <span class="n">80</span>\n`;
+  yaml += `      <span class="k">allowedRoutes</span>:\n`;
+  yaml += `        <span class="k">namespaces</span>:\n`;
+  yaml += `          <span class="k">from</span>: <span class="v">Same</span>\n`;
+  yaml += `<span class="p">---</span>\n`;
+  yaml += `<span class="k">apiVersion</span>: gateway.networking.k8s.io/v1\n`;
+  yaml += `<span class="k">kind</span>: HTTPRoute\n`;
+  yaml += `<span class="k">metadata</span>:\n`;
+  yaml += `  <span class="k">name</span>: <span class="v">llm-route</span>\n`;
+  yaml += `  <span class="k">namespace</span>: <span class="v">llm-inference</span>\n`;
+  yaml += `<span class="k">spec</span>:\n`;
+  yaml += `  <span class="k">parentRefs</span>:\n`;
+  yaml += `    - <span class="k">name</span>: <span class="v">llm-gateway</span>\n`;
+  yaml += `  <span class="k">rules</span>:\n`;
+  yaml += `    - <span class="k">matches</span>:\n`;
+  yaml += `        - <span class="k">path</span>:\n`;
+  yaml += `            <span class="k">type</span>: <span class="v">PathPrefix</span>\n`;
+  yaml += `            <span class="k">value</span>: <span class="v">/v1</span>\n`;
+  yaml += `      <span class="k">backendRefs</span>:\n`;
+  yaml += `        - <span class="k">group</span>: <span class="v">inference.networking.x-k8s.io</span>\n`;
+  yaml += `          <span class="k">kind</span>: <span class="v">InferencePool</span>\n`;
+  yaml += `          <span class="k">name</span>: <span class="v">${wizardState.modelSize.toLowerCase()}-pool</span>\n`;
+  yaml += `          <span class="k">port</span>: <span class="n">8000</span>\n`;
+
+  return yaml;
+}
+
+function stripHtml(html) {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+}
+
+function copyYaml(btn, id) {
+  const el = document.getElementById('yaml-' + id);
+  const text = stripHtml(el.innerHTML);
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+renderWizard();
 
 
 /* ═══════════════════════════════════════════════════
-   Section 4 — Version Timeline
+   Section 4: Interactive YAML Editor
    ═══════════════════════════════════════════════════ */
-const versions = [
-  {
-    version: 'Red Hat AI 3.0',
-    year: '2024',
-    summary: 'Initial llm-d integration with basic vLLM serving',
-    features: [
-      'Initial llm-d integration',
-      'Basic vLLM model serving on OpenShift',
-      'Single-model deployment support',
-      'NVIDIA H100 GPU support',
-      'OpenAI-compatible API endpoint',
-      'Basic KServe InferenceService'
-    ]
-  },
-  {
-    version: 'Red Hat AI 3.3',
-    year: '2025',
-    summary: 'LLMInferenceService CRD, disaggregated P/D, multi-model',
-    features: [
-      'LLMInferenceService CRD for declarative LLM serving',
-      'Disaggregated prefill/decode support',
-      'Multi-model serving on shared infrastructure',
-      'EPP intelligent request routing',
-      'KV-cache-aware load balancing',
-      'H200 GPU support with extended HBM3e',
-      'AMD MI300X ROCm support',
-      'Gateway API integration'
-    ]
-  },
-  {
-    version: 'Red Hat AI 3.4',
-    year: '2025',
-    summary: 'Advanced routing, autoscaling, B200 support',
-    features: [
-      'LoRA-aware request routing in EPP',
-      'Prefix-cache-aware routing',
-      'HPA autoscaling with GPU-aware metrics',
-      'NVIDIA B200 (Blackwell) support',
-      'Multi-adapter LoRA serving',
-      'FP8 quantization for H100/H200/B200',
-      'Improved disaggregated serving performance',
-      'Advanced EPP scoring with configurable weights'
-    ]
-  }
-];
+const editorState = {
+  modelName: 'meta-llama/Llama-3.1-70B-Instruct',
+  tensorParallelism: 4,
+  maxModelLen: 32768,
+  gpuMemUtil: 0.92,
+  replicas: 3,
+  disagg: false,
+  prefillReplicas: 2,
+  decodeReplicas: 4,
+  prefixCaching: true,
+  loraEnabled: false,
+  quantization: 'auto'
+};
 
-function renderTimeline() {
-  const container = document.getElementById('timeline');
-  const line = container.querySelector('.timeline-line');
-  let html = '';
-  versions.forEach((v, i) => {
-    html += `
-      <div class="timeline-node${i === versions.length - 1 ? ' active' : ''}" data-idx="${i}" onclick="selectVersion(${i})">
-        <div class="timeline-dot"></div>
-        <div class="timeline-version">${v.version}</div>
-        <div class="timeline-year">${v.year}</div>
-        <div class="timeline-summary">${v.summary}</div>
-        <div class="timeline-detail">
-          <div class="timeline-detail-inner">
-            <ul>${v.features.map(f => `<li>${f}</li>`).join('')}</ul>
-          </div>
+function renderEditorControls() {
+  const c = document.getElementById('editorControls');
+  c.innerHTML = `
+    <div class="editor-control-group">
+      <div class="editor-control-label">Model Configuration</div>
+      <div class="editor-field">
+        <div class="editor-field-label">modelName</div>
+        <select class="editor-select" onchange="editorState.modelName=this.value;renderEditorYaml()">
+          <option ${editorState.modelName === 'meta-llama/Llama-3.1-8B-Instruct' ? 'selected' : ''} value="meta-llama/Llama-3.1-8B-Instruct">Llama 3.1 8B Instruct</option>
+          <option ${editorState.modelName === 'meta-llama/Llama-3.1-70B-Instruct' ? 'selected' : ''} value="meta-llama/Llama-3.1-70B-Instruct">Llama 3.1 70B Instruct</option>
+          <option ${editorState.modelName === 'meta-llama/Llama-3.1-405B-Instruct' ? 'selected' : ''} value="meta-llama/Llama-3.1-405B-Instruct">Llama 3.1 405B Instruct</option>
+          <option ${editorState.modelName === 'mistralai/Mixtral-8x7B-Instruct-v0.1' ? 'selected' : ''} value="mistralai/Mixtral-8x7B-Instruct-v0.1">Mixtral 8x7B Instruct</option>
+          <option ${editorState.modelName === 'Qwen/Qwen2.5-72B-Instruct' ? 'selected' : ''} value="Qwen/Qwen2.5-72B-Instruct">Qwen 2.5 72B Instruct</option>
+        </select>
+      </div>
+      <div class="editor-field">
+        <div class="editor-field-label">tensorParallelism</div>
+        <div class="editor-slider-row">
+          <input type="range" class="editor-slider" min="1" max="8" step="1" value="${editorState.tensorParallelism}" oninput="editorState.tensorParallelism=parseInt(this.value);document.getElementById('tpVal').textContent=this.value;renderEditorYaml()">
+          <span class="editor-slider-value" id="tpVal">${editorState.tensorParallelism}</span>
         </div>
       </div>
-    `;
-  });
-  container.innerHTML = html;
-  container.insertAdjacentElement('afterbegin', line);
+      <div class="editor-field">
+        <div class="editor-field-label">maxModelLen</div>
+        <div class="editor-slider-row">
+          <input type="range" class="editor-slider" min="2048" max="131072" step="2048" value="${editorState.maxModelLen}" oninput="editorState.maxModelLen=parseInt(this.value);document.getElementById('mmlVal').textContent=(this.value/1024).toFixed(0)+'K';renderEditorYaml()">
+          <span class="editor-slider-value" id="mmlVal">${(editorState.maxModelLen/1024).toFixed(0)}K</span>
+        </div>
+      </div>
+      <div class="editor-field">
+        <div class="editor-field-label">gpuMemoryUtilization</div>
+        <div class="editor-slider-row">
+          <input type="range" class="editor-slider" min="0.5" max="0.98" step="0.02" value="${editorState.gpuMemUtil}" oninput="editorState.gpuMemUtil=parseFloat(this.value);document.getElementById('gmuVal').textContent=parseFloat(this.value).toFixed(2);renderEditorYaml()">
+          <span class="editor-slider-value" id="gmuVal">${editorState.gpuMemUtil.toFixed(2)}</span>
+        </div>
+      </div>
+      <div class="editor-field">
+        <div class="editor-field-label">quantization</div>
+        <select class="editor-select" onchange="editorState.quantization=this.value;renderEditorYaml()">
+          <option ${editorState.quantization === 'auto' ? 'selected' : ''} value="auto">auto (FP16)</option>
+          <option ${editorState.quantization === 'fp8' ? 'selected' : ''} value="fp8">FP8</option>
+          <option ${editorState.quantization === 'awq' ? 'selected' : ''} value="awq">AWQ</option>
+          <option ${editorState.quantization === 'gptq' ? 'selected' : ''} value="gptq">GPTQ</option>
+        </select>
+      </div>
+    </div>
+    <div class="editor-control-group">
+      <div class="editor-control-label">Serving Configuration</div>
+      <div class="editor-field">
+        <div class="editor-field-label">replicas</div>
+        <div class="editor-slider-row">
+          <input type="range" class="editor-slider" min="1" max="16" step="1" value="${editorState.replicas}" oninput="editorState.replicas=parseInt(this.value);document.getElementById('repVal').textContent=this.value;renderEditorYaml()">
+          <span class="editor-slider-value" id="repVal">${editorState.replicas}</span>
+        </div>
+      </div>
+      <div class="editor-toggle-row" onclick="editorState.disagg=!editorState.disagg;renderEditorControls();renderEditorYaml()">
+        <span class="editor-toggle-label">disaggregatedServing</span>
+        <div class="toggle-switch ${editorState.disagg ? 'on' : ''}"></div>
+      </div>
+      ${editorState.disagg ? `
+        <div class="editor-field" style="margin-top:10px">
+          <div class="editor-field-label">prefillReplicas</div>
+          <div class="editor-slider-row">
+            <input type="range" class="editor-slider" min="1" max="8" step="1" value="${editorState.prefillReplicas}" oninput="editorState.prefillReplicas=parseInt(this.value);document.getElementById('prVal').textContent=this.value;renderEditorYaml()">
+            <span class="editor-slider-value" id="prVal">${editorState.prefillReplicas}</span>
+          </div>
+        </div>
+        <div class="editor-field">
+          <div class="editor-field-label">decodeReplicas</div>
+          <div class="editor-slider-row">
+            <input type="range" class="editor-slider" min="1" max="12" step="1" value="${editorState.decodeReplicas}" oninput="editorState.decodeReplicas=parseInt(this.value);document.getElementById('drVal').textContent=this.value;renderEditorYaml()">
+            <span class="editor-slider-value" id="drVal">${editorState.decodeReplicas}</span>
+          </div>
+        </div>
+      ` : ''}
+      <div class="editor-toggle-row" onclick="editorState.prefixCaching=!editorState.prefixCaching;renderEditorControls();renderEditorYaml()">
+        <span class="editor-toggle-label">prefixCaching</span>
+        <div class="toggle-switch ${editorState.prefixCaching ? 'on' : ''}"></div>
+      </div>
+      <div class="editor-toggle-row" onclick="editorState.loraEnabled=!editorState.loraEnabled;renderEditorControls();renderEditorYaml()">
+        <span class="editor-toggle-label">loraAdapters</span>
+        <div class="toggle-switch ${editorState.loraEnabled ? 'on' : ''}"></div>
+      </div>
+    </div>
+  `;
 }
 
-function selectVersion(idx) {
-  document.querySelectorAll('.timeline-node').forEach((n, i) => {
-    n.classList.toggle('active', i === idx);
+function renderEditorYaml() {
+  const s = editorState;
+  let yaml = `<span class="k">apiVersion</span>: inference.llm-d.ai/v1alpha1\n`;
+  yaml += `<span class="k">kind</span>: LLMInferenceService\n`;
+  yaml += `<span class="k">metadata</span>:\n`;
+  yaml += `  <span class="k">name</span>: <span class="v">my-llm-service</span>\n`;
+  yaml += `  <span class="k">namespace</span>: <span class="v">llm-inference</span>\n`;
+  yaml += `<span class="k">spec</span>:\n`;
+  yaml += `  <span class="k">modelName</span>: <span class="v">${s.modelName}</span>\n`;
+  yaml += `  <span class="k">tensorParallelism</span>: <span class="n">${s.tensorParallelism}</span>\n`;
+  yaml += `  <span class="k">maxModelLen</span>: <span class="n">${s.maxModelLen}</span>\n`;
+  yaml += `  <span class="k">gpuMemoryUtilization</span>: <span class="n">${s.gpuMemUtil.toFixed(2)}</span>\n`;
+  if (s.quantization !== 'auto') {
+    yaml += `  <span class="k">quantization</span>: <span class="v">${s.quantization}</span>\n`;
+  }
+  yaml += `  <span class="k">replicas</span>: <span class="n">${s.replicas}</span>\n`;
+
+  if (s.disagg) {
+    yaml += `  <span class="k">disaggregatedServing</span>:\n`;
+    yaml += `    <span class="k">enabled</span>: <span class="v">true</span>\n`;
+    yaml += `    <span class="k">prefillReplicas</span>: <span class="n">${s.prefillReplicas}</span>\n`;
+    yaml += `    <span class="k">decodeReplicas</span>: <span class="n">${s.decodeReplicas}</span>\n`;
+    yaml += `    <span class="k">transferProtocol</span>: <span class="v">nixl</span>\n`;
+  }
+
+  if (s.prefixCaching) {
+    yaml += `  <span class="k">prefixCaching</span>:\n`;
+    yaml += `    <span class="k">enabled</span>: <span class="v">true</span>\n`;
+  }
+
+  if (s.loraEnabled) {
+    yaml += `  <span class="k">loraAdapters</span>:\n`;
+    yaml += `    <span class="k">enabled</span>: <span class="v">true</span>\n`;
+    yaml += `    <span class="k">maxLoadedAdapters</span>: <span class="n">4</span>\n`;
+  }
+
+  yaml += `  <span class="k">accelerator</span>:\n`;
+  yaml += `    <span class="k">type</span>: <span class="v">nvidia.com/gpu</span>\n`;
+  yaml += `    <span class="k">count</span>: <span class="n">${s.tensorParallelism}</span>\n`;
+  yaml += `  <span class="k">resources</span>:\n`;
+  yaml += `    <span class="k">limits</span>:\n`;
+  yaml += `      <span class="k">memory</span>: <span class="v">${Math.max(64, s.tensorParallelism * 64)}Gi</span>\n`;
+  yaml += `      <span class="k">cpu</span>: <span class="v">${Math.max(8, s.tensorParallelism * 8)}</span>\n`;
+
+  const el = document.getElementById('editorYamlCode');
+  el.innerHTML = yaml;
+  el.classList.add('editor-highlight-flash');
+  setTimeout(() => el.classList.remove('editor-highlight-flash'), 600);
+}
+
+function copyEditorYaml() {
+  const el = document.getElementById('editorYamlCode');
+  const text = stripHtml(el.innerHTML);
+  const btn = document.querySelector('#editorYamlPanel .copy-btn');
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
   });
 }
 
-renderTimeline();
+renderEditorControls();
+renderEditorYaml();
 
 
 /* ═══════════════════════════════════════════════════
-   Section 5 — Hardware Compatibility Matrix
+   Section 5: Version Comparison
    ═══════════════════════════════════════════════════ */
-const gpus = [
-  { name: 'NVIDIA H100 SXM', serving: 'yes', disagg: 'yes', tp: 'yes', lora: 'yes', fp8: 'yes', badge: null },
-  { name: 'NVIDIA H100 PCIe', serving: 'yes', disagg: 'partial', tp: 'yes', lora: 'yes', fp8: 'yes', badge: null, note: 'Lower NVLink BW' },
-  { name: 'NVIDIA H200', serving: 'yes', disagg: 'yes', tp: 'yes', lora: 'yes', fp8: 'yes', badge: null },
-  { name: 'NVIDIA B200', serving: 'yes', disagg: 'yes', tp: 'yes', lora: 'yes', fp8: 'yes', badge: 'NEW' },
-  { name: 'AMD MI300X', serving: 'yes', disagg: 'yes', tp: 'yes', lora: 'partial', fp8: 'no', badge: null, note: 'Use FP16' }
+const versionData = {
+  '3.0': {
+    components: [
+      { name: 'KServe InferenceService', icon: '&#9881;', status: 'base' },
+      { name: 'Basic vLLM Serving', icon: '&#9654;', status: 'base' },
+      { name: 'NVIDIA GPU Operator', icon: '&#9889;', status: 'base' },
+      { name: 'OpenShift Route', icon: '&#127760;', status: 'base' },
+      { name: 'Single Model Deployment', icon: '&#128230;', status: 'base' },
+      { name: 'OpenAI-Compatible API', icon: '&#128172;', status: 'base' }
+    ],
+    changes: [
+      { type: 'new', text: 'Initial llm-d integration with OpenShift AI platform' },
+      { type: 'new', text: 'Basic vLLM model serving with single-model deployments' },
+      { type: 'new', text: 'NVIDIA H100 GPU support via GPU Operator' },
+      { type: 'new', text: 'OpenAI-compatible API endpoint (chat completions)' },
+      { type: 'new', text: 'KServe InferenceService for model lifecycle management' }
+    ]
+  },
+  '3.3': {
+    components: [
+      { name: 'KServe InferenceService', icon: '&#9881;', status: 'base' },
+      { name: 'LLMInferenceService CRD', icon: '&#128736;', status: 'added' },
+      { name: 'EPP Endpoint Picker', icon: '&#127919;', status: 'added' },
+      { name: 'Gateway API (Envoy)', icon: '&#128295;', status: 'added' },
+      { name: 'Disaggregated P/D Serving', icon: '&#128256;', status: 'added' },
+      { name: 'InferencePool CRD', icon: '&#128203;', status: 'added' },
+      { name: 'Multi-Model Serving', icon: '&#128202;', status: 'added' },
+      { name: 'vLLM with PagedAttention', icon: '&#9654;', status: 'base' },
+      { name: 'AMD MI300X Support', icon: '&#128308;', status: 'added' },
+      { name: 'H200 GPU Support', icon: '&#128994;', status: 'added' }
+    ],
+    changes: [
+      { type: 'new', text: 'LLMInferenceService CRD for declarative LLM-specific serving' },
+      { type: 'new', text: 'Endpoint Picker (EPP) for intelligent request routing' },
+      { type: 'new', text: 'Gateway API integration (replacing direct Service routing)' },
+      { type: 'new', text: 'Disaggregated prefill/decode with NIXL transfer protocol' },
+      { type: 'new', text: 'InferencePool CRD for grouping model endpoints' },
+      { type: 'new', text: 'AMD MI300X ROCm support' },
+      { type: 'new', text: 'NVIDIA H200 with extended HBM3e memory' },
+      { type: 'improved', text: 'KV-cache-aware load balancing via EPP metrics' }
+    ]
+  },
+  '3.4': {
+    components: [
+      { name: 'LLMInferenceService CRD', icon: '&#128736;', status: 'base' },
+      { name: 'EPP with Prefix Routing', icon: '&#127919;', status: 'added' },
+      { name: 'EPP with LoRA Routing', icon: '&#127919;', status: 'added' },
+      { name: 'Gateway API (Envoy)', icon: '&#128295;', status: 'base' },
+      { name: 'Disaggregated P/D Serving', icon: '&#128256;', status: 'base' },
+      { name: 'InferencePool CRD', icon: '&#128203;', status: 'base' },
+      { name: 'GPU-Aware HPA', icon: '&#128200;', status: 'added' },
+      { name: 'Multi-LoRA Serving', icon: '&#127912;', status: 'added' },
+      { name: 'FP8 Quantization', icon: '&#128290;', status: 'added' },
+      { name: 'B200 Blackwell Support', icon: '&#128994;', status: 'added' },
+      { name: 'KServe InferenceService', icon: '&#9881;', status: 'removed' }
+    ],
+    changes: [
+      { type: 'new', text: 'LoRA-aware request routing in EPP (adapter affinity)' },
+      { type: 'new', text: 'Prefix-cache-aware routing (hash-based prefix matching)' },
+      { type: 'new', text: 'GPU-aware HPA autoscaling with custom metrics' },
+      { type: 'new', text: 'NVIDIA B200 (Blackwell) support' },
+      { type: 'new', text: 'FP8 quantization for H100/H200/B200' },
+      { type: 'new', text: 'Multi-adapter LoRA serving with hot-loading' },
+      { type: 'improved', text: 'Advanced EPP scoring with configurable weights' },
+      { type: 'improved', text: 'Improved disaggregated serving performance via NIXL' },
+      { type: 'deprecated', text: 'Direct KServe InferenceService usage (use LLMInferenceService)' }
+    ]
+  }
+};
+
+let selectedVersion = '3.4';
+
+function renderVersionPills() {
+  const container = document.getElementById('versionPills');
+  container.innerHTML = ['3.0', '3.3', '3.4'].map(v =>
+    `<div class="pill ${selectedVersion === v ? 'active' : ''}" onclick="selectVersion('${v}')">Red Hat AI ${v}</div>`
+  ).join('');
+}
+
+function selectVersion(v) {
+  selectedVersion = v;
+  renderVersionPills();
+  renderVersionContent();
+}
+
+function renderVersionContent() {
+  const data = versionData[selectedVersion];
+  const container = document.getElementById('versionContent');
+
+  container.innerHTML = `
+    <div class="version-arch">
+      <div class="version-arch-title">Architecture Components</div>
+      <div class="version-component-list">
+        ${data.components.map(c => `
+          <div class="version-component ${c.status}">
+            <span class="version-component-icon">${c.icon}</span>
+            <span class="version-component-name">${c.name}</span>
+            ${c.status === 'added' ? '<span class="badge badge-green version-component-badge">New</span>' : ''}
+            ${c.status === 'removed' ? '<span class="badge badge-red version-component-badge">Deprecated</span>' : ''}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="version-changes">
+      <div class="version-changes-title">Changes in ${selectedVersion}</div>
+      ${data.changes.map(c => `
+        <div class="version-change-item">
+          <div class="version-change-marker ${c.type}"></div>
+          <div class="version-change-text">${c.text}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+renderVersionPills();
+renderVersionContent();
+
+
+/* ═══════════════════════════════════════════════════
+   Section 6: Hardware Matrix
+   ═══════════════════════════════════════════════════ */
+const gpuMatrix = [
+  { name: 'NVIDIA H100 SXM', mem: '80 GB HBM3', serving: 'yes', disagg: 'yes', tp: 'yes', lora: 'yes', fp8: 'yes', price: 3.50, models: ['7B','13B','34B','70B'], badge: null },
+  { name: 'NVIDIA H100 PCIe', mem: '80 GB HBM3', serving: 'yes', disagg: 'partial', tp: 'yes', lora: 'yes', fp8: 'yes', price: 2.80, models: ['7B','13B','34B','70B'], badge: null, note: 'Lower NVLink bandwidth' },
+  { name: 'NVIDIA H200', mem: '141 GB HBM3e', serving: 'yes', disagg: 'yes', tp: 'yes', lora: 'yes', fp8: 'yes', price: 4.50, models: ['7B','13B','34B','70B','405B'], badge: null },
+  { name: 'NVIDIA B200', mem: '192 GB HBM3e', serving: 'yes', disagg: 'yes', tp: 'yes', lora: 'yes', fp8: 'yes', price: 6.00, models: ['7B','13B','34B','70B','405B'], badge: 'NEW' },
+  { name: 'AMD MI300X', mem: '192 GB HBM3', serving: 'yes', disagg: 'yes', tp: 'yes', lora: 'partial', fp8: 'no', price: 3.20, models: ['7B','13B','34B','70B','405B'], badge: null, note: 'Use FP16, partial LoRA' }
 ];
 
-const columns = ['Basic Serving', 'Disaggregated P/D', 'Tensor Parallelism', 'LoRA Multi-Adapter', 'FP8 Quantization'];
+let hwFilterModel = 'all';
+
+function renderHWFilter() {
+  const bar = document.getElementById('hwFilterBar');
+  bar.innerHTML = `
+    <span class="hw-filter-label">Filter by model size:</span>
+    <div class="pill-group">
+      <div class="pill ${hwFilterModel === 'all' ? 'active' : ''}" onclick="setHWFilter('all')">All</div>
+      ${['7B','13B','34B','70B','405B'].map(m =>
+        `<div class="pill ${hwFilterModel === m ? 'active' : ''}" onclick="setHWFilter('${m}')">${m}</div>`
+      ).join('')}
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="recommendGPU()" style="margin-left:auto">Recommend for me</button>
+  `;
+}
+
+function setHWFilter(m) {
+  hwFilterModel = m;
+  renderHWFilter();
+  renderHWMatrix();
+}
 
 function cellHTML(val, note) {
-  if (val === 'yes') return '<span class="hw-check" title="Fully supported">&#10003;</span>';
-  if (val === 'partial') return `<span class="hw-partial" title="${note || 'Partial support'}">&#9679;</span>`;
-  return `<span class="hw-no" title="${note || 'Not supported'}">&mdash;</span>`;
+  if (val === 'yes') return '<span class="hw-check">&#10003;</span>';
+  if (val === 'partial') return '<span class="hw-partial" title="' + (note || 'Partial') + '">&#9679;</span>';
+  return '<span class="hw-no" title="' + (note || 'Not supported') + '">&mdash;</span>';
 }
 
 function renderHWMatrix() {
   const container = document.getElementById('hwMatrix');
+  const filtered = hwFilterModel === 'all' ? gpuMatrix : gpuMatrix.map(g => ({
+    ...g,
+    recommended: g.models.includes(hwFilterModel),
+    notRec: !g.models.includes(hwFilterModel)
+  }));
+
   container.innerHTML = `
     <table>
       <thead>
         <tr>
           <th style="text-align:left">GPU Model</th>
-          ${columns.map(c => `<th>${c}</th>`).join('')}
+          <th>Memory</th>
+          <th>Basic Serving</th>
+          <th>Disaggregated P/D</th>
+          <th>Tensor Parallel</th>
+          <th>LoRA Multi-Adapter</th>
+          <th>FP8 Quant</th>
+          <th>$/GPU/hr</th>
         </tr>
       </thead>
       <tbody>
-        ${gpus.map(g => `
-          <tr>
+        ${filtered.map(g => `
+          <tr class="${g.recommended ? 'recommended' : ''} ${g.notRec ? 'not-recommended' : ''}">
             <td>${g.name}${g.badge ? `<span class="badge-new">${g.badge}</span>` : ''}</td>
+            <td style="color:var(--text-secondary)">${g.mem}</td>
             <td>${cellHTML(g.serving)}</td>
             <td>${cellHTML(g.disagg, g.note)}</td>
             <td>${cellHTML(g.tp)}</td>
-            <td>${cellHTML(g.lora, g.name === 'AMD MI300X' ? 'Partial LoRA support' : '')}</td>
-            <td>${cellHTML(g.fp8, g.name === 'AMD MI300X' ? 'Use FP16' : '')}</td>
+            <td>${cellHTML(g.lora, g.note)}</td>
+            <td>${cellHTML(g.fp8, g.note)}</td>
+            <td style="font-family:var(--mono);color:var(--text-secondary)">$${g.price.toFixed(2)}</td>
           </tr>
         `).join('')}
       </tbody>
@@ -1670,128 +3354,469 @@ function renderHWMatrix() {
   `;
 }
 
+function recommendGPU() {
+  const panel = document.getElementById('hwRecommendation');
+  const model = hwFilterModel === 'all' ? '70B' : hwFilterModel;
+  let rec = '';
+  if (['7B','13B'].includes(model)) {
+    rec = `For a <strong>${model} model</strong>, we recommend the <strong>H100 PCIe</strong> for cost efficiency or <strong>H100 SXM</strong> for maximum throughput. A single GPU per pod is sufficient. Total estimated cost: $2.80-3.50/hr per pod.`;
+  } else if (model === '34B') {
+    rec = `For a <strong>34B model</strong>, we recommend <strong>H100 SXM</strong> with 2-way tensor parallelism for the best throughput/cost ratio. H200 is also excellent if you need longer context windows. Estimated: $7.00/hr per pod (2x H100 SXM).`;
+  } else if (model === '70B') {
+    rec = `For a <strong>70B model</strong>, we recommend <strong>H100 SXM</strong> or <strong>H200</strong> with 4-way tensor parallelism. H200 enables longer context due to 141GB memory. For budget deployments, consider FP8 quantization to fit on 2x H200. Estimated: $14.00-18.00/hr per pod.`;
+  } else {
+    rec = `For a <strong>405B model</strong>, we recommend <strong>H200</strong> or <strong>B200</strong> with 8-way tensor parallelism across a full DGX-class node. FP8 quantization is strongly recommended. Estimated: $36.00-48.00/hr per pod.`;
+  }
+  panel.innerHTML = `<h4>Recommendation for ${model} Model</h4><p>${rec}</p>`;
+  panel.classList.add('visible');
+}
+
+renderHWFilter();
 renderHWMatrix();
 
 
 /* ═══════════════════════════════════════════════════
-   Section 6 — Deployment Topology
+   Section 7: Deployment Topology
    ═══════════════════════════════════════════════════ */
-const topologies = [
-  {
-    id: 'single',
-    icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="8" y="8" width="3" height="3"/><rect x="13" y="8" width="3" height="3"/><rect x="8" y="13" width="3" height="3"/><rect x="13" y="13" width="3" height="3"/></svg>',
-    name: 'Single Node',
-    desc: 'One node with 1-8 GPUs. Ideal for development, testing, and small production models.',
-    specs: '1 node, up to 8 GPUs',
-    hardware: 'NVIDIA H100 SXM or H200 (8x GPU node)',
-    nodeCount: '1 node with 8x H100 80GB',
-    useCases: ['Development and testing', 'Models up to 70B parameters', 'Low-latency single-user inference', 'LoRA fine-tuned model serving'],
-    diagram: `
-      <div class="topo-diagram">
-        <div class="topo-box">
-          <div class="box-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="8" y="8" width="3" height="3"/><rect x="13" y="8" width="3" height="3"/><rect x="8" y="13" width="3" height="3"/><rect x="13" y="13" width="3" height="3"/></svg></div>
-          <div class="box-label">8x GPU Node</div>
-        </div>
-      </div>`
-  },
-  {
-    id: 'multi-node',
-    icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="8" height="8" rx="1"/><line x1="10" y1="6" x2="14" y2="6"/><line x1="10" y1="18" x2="14" y2="18"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="18" y1="10" x2="18" y2="14"/></svg>',
-    name: 'Multi-Node',
-    desc: 'Multiple nodes in one OpenShift cluster. Production-grade with high availability and scaling.',
-    specs: '4-32 nodes in a single cluster',
-    hardware: 'Mix of H100/H200/B200 nodes with InfiniBand',
-    nodeCount: '8 nodes (64 GPUs total)',
-    useCases: ['Production LLM serving at scale', 'Multiple model deployments', 'Disaggregated prefill/decode', 'Multi-tenant inference platform'],
-    diagram: `
-      <div class="topo-diagram">
-        <div class="topo-box">
-          <div class="box-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></div>
-          <div class="box-label">Node 1</div>
-        </div>
-        <span class="topo-connector-h">&harr;</span>
-        <div class="topo-box">
-          <div class="box-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></div>
-          <div class="box-label">Node 2</div>
-        </div>
-        <span class="topo-connector-h">&harr;</span>
-        <div class="topo-box">
-          <div class="box-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></div>
-          <div class="box-label">Node 3</div>
-        </div>
-        <span class="topo-connector-h">&harr;</span>
-        <div class="topo-box">
-          <div class="box-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></div>
-          <div class="box-label">Node N</div>
-        </div>
-      </div>`
-  },
-  {
-    id: 'multi-cluster',
-    icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="4"/><circle cx="18" cy="6" r="4"/><circle cx="12" cy="18" r="4"/><line x1="9" y1="8" x2="15" y2="8" stroke-dasharray="2"/><line x1="7.5" y1="9.5" x2="10.5" y2="15" stroke-dasharray="2"/><line x1="16.5" y1="9.5" x2="13.5" y2="15" stroke-dasharray="2"/></svg>',
-    name: 'Multi-Cluster',
-    desc: 'Multiple OpenShift clusters across regions. Geo-distributed for redundancy and low latency.',
-    specs: '2+ clusters across regions',
-    hardware: 'Region-optimized GPU mix',
-    nodeCount: '3 clusters, 24+ nodes total',
-    useCases: ['Geo-distributed inference', 'Disaster recovery and high availability', 'Regulatory compliance (data residency)', 'Global low-latency serving'],
-    diagram: `
-      <div class="topo-diagram">
-        <div class="topo-box-cluster">
-          <span class="cluster-label">US-East Cluster</span>
-          <div class="topo-box-sm">N1</div>
-          <div class="topo-box-sm">N2</div>
-          <div class="topo-box-sm">N3</div>
-        </div>
-        <span class="topo-connector-h">&harr;</span>
-        <div class="topo-box-cluster">
-          <span class="cluster-label">EU-West Cluster</span>
-          <div class="topo-box-sm">N1</div>
-          <div class="topo-box-sm">N2</div>
-          <div class="topo-box-sm">N3</div>
-        </div>
-        <span class="topo-connector-h">&harr;</span>
-        <div class="topo-box-cluster">
-          <span class="cluster-label">AP-South Cluster</span>
-          <div class="topo-box-sm">N1</div>
-          <div class="topo-box-sm">N2</div>
-        </div>
-      </div>`
-  }
-];
+let selectedTopo = 'single';
 
-function renderTopologies() {
-  const container = document.getElementById('topoCards');
-  container.innerHTML = topologies.map(t => `
-    <div class="topo-card" data-topo="${t.id}" onclick="selectTopo('${t.id}')">
-      <div class="topo-header">
-        <span class="topo-icon">${t.icon}</span>
-        <h3>${t.name}</h3>
-      </div>
-      <p>${t.desc}</p>
-      <div class="topo-specs">${t.specs}</div>
-      <div class="topo-detail">
-        <div class="topo-detail-inner">
-          <h4>Recommended Hardware</h4>
-          <p>${t.hardware}</p>
-          <h4>Example Scale</h4>
-          <p>${t.nodeCount}</p>
-          <h4>Use Cases</h4>
-          <ul>${t.useCases.map(u => `<li>${u}</li>`).join('')}</ul>
-          ${t.diagram}
-        </div>
-      </div>
-    </div>
-  `).join('');
+const topoData = {
+  single: {
+    title: 'Single Node Deployment',
+    desc: 'All inference pods run on a single GPU node. Ideal for development, testing, and small production workloads up to 70B parameters.',
+    details: [
+      { label: 'Nodes', value: '1' },
+      { label: 'GPUs', value: 'Up to 8' },
+      { label: 'Max Model', value: '70B (FP16)' },
+      { label: 'Latency', value: 'Lowest' },
+      { label: 'Availability', value: 'No HA' },
+      { label: 'Use Case', value: 'Dev / Small Prod' }
+    ]
+  },
+  'multi-node': {
+    title: 'Multi-Node Deployment',
+    desc: 'Multiple GPU nodes in a single OpenShift cluster. Production-grade with high availability, autoscaling, and disaggregated serving across nodes.',
+    details: [
+      { label: 'Nodes', value: '4-32' },
+      { label: 'GPUs', value: '32-256' },
+      { label: 'Max Model', value: '405B+' },
+      { label: 'Network', value: 'InfiniBand / RoCE' },
+      { label: 'Availability', value: 'HA with HPA' },
+      { label: 'Use Case', value: 'Production Scale' }
+    ]
+  },
+  'multi-cluster': {
+    title: 'Multi-Cluster Deployment',
+    desc: 'Multiple OpenShift clusters across geographic regions. Provides geo-distributed inference, disaster recovery, and regulatory compliance for data residency.',
+    details: [
+      { label: 'Clusters', value: '2-5' },
+      { label: 'Regions', value: 'Global' },
+      { label: 'GPUs', value: '64-1000+' },
+      { label: 'Network', value: 'Inter-cluster mesh' },
+      { label: 'Availability', value: 'Multi-region HA' },
+      { label: 'Use Case', value: 'Global Enterprise' }
+    ]
+  }
+};
+
+function renderTopoPills() {
+  const container = document.getElementById('topoPills');
+  container.innerHTML = [
+    { id: 'single', label: 'Single Node' },
+    { id: 'multi-node', label: 'Multi-Node' },
+    { id: 'multi-cluster', label: 'Multi-Cluster' }
+  ].map(t => `<div class="pill ${selectedTopo === t.id ? 'active' : ''}" onclick="selectTopo('${t.id}')">${t.label}</div>`).join('');
 }
 
 function selectTopo(id) {
-  document.querySelectorAll('.topo-card').forEach(c => {
-    c.classList.toggle('active', c.dataset.topo === id && !c.classList.contains('active'));
-  });
+  selectedTopo = id;
+  renderTopoPills();
+  renderTopoDisplay();
 }
 
-renderTopologies();
+function renderTopoDisplay() {
+  const data = topoData[selectedTopo];
+  const display = document.getElementById('topoDisplay');
+
+  let visual = '';
+  if (selectedTopo === 'single') {
+    visual = `
+      <div class="topo-visual">
+        <div class="topo-node highlight" onclick="this.classList.toggle('highlight')">
+          <div class="topo-node-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div class="topo-node-label">User</div>
+        </div>
+        <div class="topo-arrow">&#10132;</div>
+        <div class="topo-node" onclick="this.classList.toggle('highlight')">
+          <div class="topo-node-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div>
+          <div class="topo-node-label">Gateway + EPP</div>
+        </div>
+        <div class="topo-arrow">&#10132;</div>
+        <div class="topo-node" onclick="this.classList.toggle('highlight')">
+          <div class="topo-node-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="8" y="8" width="3" height="3"/><rect x="13" y="8" width="3" height="3"/><rect x="8" y="13" width="3" height="3"/><rect x="13" y="13" width="3" height="3"/></svg></div>
+          <div class="topo-node-label">GPU Node</div>
+          <div class="topo-node-sub">8x H100 SXM</div>
+          <div class="topo-node-gpus">
+            ${Array(8).fill(0).map((_, i) => `<div class="topo-gpu-dot ${i < 4 ? 'decode' : 'prefill'}"></div>`).join('')}
+          </div>
+        </div>
+      </div>`;
+  } else if (selectedTopo === 'multi-node') {
+    visual = `
+      <div class="topo-visual">
+        <div class="topo-node highlight">
+          <div class="topo-node-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg></div>
+          <div class="topo-node-label">Gateway + EPP</div>
+        </div>
+        <div class="topo-arrow">&#10132;</div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          ${[1,2,3,4].map(n => `
+            <div class="topo-node" onclick="this.classList.toggle('highlight')" style="min-width:160px">
+              <div class="topo-node-label">Node ${n}</div>
+              <div class="topo-node-sub">${n <= 2 ? 'Prefill Pods' : 'Decode Pods'}</div>
+              <div class="topo-node-gpus">
+                ${Array(8).fill(0).map((_, i) => `<div class="topo-gpu-dot ${n <= 2 ? 'prefill' : 'decode'}"></div>`).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+  } else {
+    visual = `
+      <div class="topo-visual">
+        ${['US-East','EU-West','AP-South'].map((region, ri) => `
+          <div class="topo-cluster-box">
+            <div class="topo-cluster-label">${region}</div>
+            <div class="topo-cluster-nodes">
+              ${Array(ri === 2 ? 2 : 3).fill(0).map((_, ni) => `
+                <div class="topo-mini-node" onclick="this.style.borderColor=this.style.borderColor==='rgb(59, 130, 246)'?'':'rgb(59, 130, 246)'">N${ni+1}</div>
+              `).join('')}
+            </div>
+          </div>
+          ${ri < 2 ? '<div class="topo-arrow">&#8596;</div>' : ''}
+        `).join('')}
+      </div>`;
+  }
+
+  display.innerHTML = `
+    <div class="topo-title">${data.title}</div>
+    <div class="topo-desc">${data.desc}</div>
+    ${visual}
+    <div class="topo-details">
+      ${data.details.map(d => `
+        <div class="topo-detail-card">
+          <div class="topo-detail-label">${d.label}</div>
+          <div class="topo-detail-value">${d.value}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+renderTopoPills();
+renderTopoDisplay();
+
+
+/* ═══════════════════════════════════════════════════
+   Section 8: GPU Topology Awareness
+   ═══════════════════════════════════════════════════ */
+let gpuTopoConfig = 'h100-8';
+
+const gpuTopoConfigs = {
+  'h100-8': {
+    label: '8x H100 SXM',
+    numaNodes: [
+      { label: 'NUMA Node 0', cpu: 'Intel Xeon 8480+ (56 cores)', gpus: [
+        { id: 0, label: 'GPU 0', mem: '80 GB HBM3', util: 78, temp: 72 },
+        { id: 1, label: 'GPU 1', mem: '80 GB HBM3', util: 82, temp: 74 },
+        { id: 2, label: 'GPU 2', mem: '80 GB HBM3', util: 65, temp: 68 },
+        { id: 3, label: 'GPU 3', mem: '80 GB HBM3', util: 71, temp: 70 }
+      ]},
+      { label: 'NUMA Node 1', cpu: 'Intel Xeon 8480+ (56 cores)', gpus: [
+        { id: 4, label: 'GPU 4', mem: '80 GB HBM3', util: 88, temp: 76 },
+        { id: 5, label: 'GPU 5', mem: '80 GB HBM3', util: 91, temp: 78 },
+        { id: 6, label: 'GPU 6', mem: '80 GB HBM3', util: 45, temp: 62 },
+        { id: 7, label: 'GPU 7', mem: '80 GB HBM3', util: 52, temp: 65 }
+      ]}
+    ],
+    nvlink: '900 GB/s NVLink 4.0 (all-to-all via NVSwitch)',
+    pcie: 'PCIe Gen5 x16 (CPU-GPU)'
+  },
+  'h200-8': {
+    label: '8x H200 SXM',
+    numaNodes: [
+      { label: 'NUMA Node 0', cpu: 'Intel Xeon 8480+ (56 cores)', gpus: [
+        { id: 0, label: 'GPU 0', mem: '141 GB HBM3e', util: 62, temp: 68 },
+        { id: 1, label: 'GPU 1', mem: '141 GB HBM3e', util: 58, temp: 66 },
+        { id: 2, label: 'GPU 2', mem: '141 GB HBM3e', util: 70, temp: 71 },
+        { id: 3, label: 'GPU 3', mem: '141 GB HBM3e', util: 65, temp: 69 }
+      ]},
+      { label: 'NUMA Node 1', cpu: 'Intel Xeon 8480+ (56 cores)', gpus: [
+        { id: 4, label: 'GPU 4', mem: '141 GB HBM3e', util: 75, temp: 73 },
+        { id: 5, label: 'GPU 5', mem: '141 GB HBM3e', util: 80, temp: 75 },
+        { id: 6, label: 'GPU 6', mem: '141 GB HBM3e', util: 55, temp: 64 },
+        { id: 7, label: 'GPU 7', mem: '141 GB HBM3e', util: 48, temp: 60 }
+      ]}
+    ],
+    nvlink: '900 GB/s NVLink 4.0 (all-to-all via NVSwitch)',
+    pcie: 'PCIe Gen5 x16 (CPU-GPU)'
+  },
+  'mi300x-8': {
+    label: '8x MI300X',
+    numaNodes: [
+      { label: 'NUMA Node 0', cpu: 'AMD EPYC 9654 (48 cores)', gpus: [
+        { id: 0, label: 'GPU 0', mem: '192 GB HBM3', util: 72, temp: 70 },
+        { id: 1, label: 'GPU 1', mem: '192 GB HBM3', util: 68, temp: 68 },
+        { id: 2, label: 'GPU 2', mem: '192 GB HBM3', util: 55, temp: 63 },
+        { id: 3, label: 'GPU 3', mem: '192 GB HBM3', util: 60, temp: 65 }
+      ]},
+      { label: 'NUMA Node 1', cpu: 'AMD EPYC 9654 (48 cores)', gpus: [
+        { id: 4, label: 'GPU 4', mem: '192 GB HBM3', util: 82, temp: 74 },
+        { id: 5, label: 'GPU 5', mem: '192 GB HBM3', util: 78, temp: 72 },
+        { id: 6, label: 'GPU 6', mem: '192 GB HBM3', util: 42, temp: 58 },
+        { id: 7, label: 'GPU 7', mem: '192 GB HBM3', util: 50, temp: 61 }
+      ]}
+    ],
+    nvlink: '896 GB/s Infinity Fabric (XGMI peer-to-peer)',
+    pcie: 'PCIe Gen5 x16 (CPU-GPU)'
+  }
+};
+
+let selectedGPUId = null;
+
+function renderGPUTopoPills() {
+  const container = document.getElementById('gpuTopoPills');
+  container.innerHTML = Object.entries(gpuTopoConfigs).map(([id, cfg]) =>
+    `<div class="pill ${gpuTopoConfig === id ? 'active' : ''}" onclick="setGPUTopoConfig('${id}')">${cfg.label}</div>`
+  ).join('');
+}
+
+function setGPUTopoConfig(id) {
+  gpuTopoConfig = id;
+  selectedGPUId = null;
+  renderGPUTopoPills();
+  renderGPUTopo();
+}
+
+function renderGPUTopo() {
+  const cfg = gpuTopoConfigs[gpuTopoConfig];
+  const visual = document.getElementById('gpuTopoVisual');
+
+  visual.innerHTML = `
+    <div class="gpu-topo-visual">
+      ${cfg.numaNodes.map(numa => `
+        <div class="numa-node">
+          <div class="numa-label">${numa.label}</div>
+          <div class="numa-cpu">${numa.cpu}</div>
+          <div class="numa-gpus">
+            ${numa.gpus.map(gpu => `
+              <div class="gpu-chip ${selectedGPUId === gpu.id ? 'selected' : ''}" onclick="selectGPU(${gpu.id})">
+                <div class="gpu-chip-label">${gpu.label}</div>
+                <div class="gpu-chip-mem">${gpu.mem}</div>
+                <div class="gpu-chip-bar">
+                  <div class="gpu-chip-bar-fill" style="width:${gpu.util}%;background:${gpu.util > 85 ? 'var(--red)' : gpu.util > 70 ? 'var(--amber)' : 'var(--green)'}"></div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="pcie-connection">${cfg.pcie}</div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="nvlink-label">${cfg.nvlink}</div>
+    <div class="gpu-detail-panel ${selectedGPUId !== null ? 'visible' : ''}" id="gpuDetailInner"></div>
+  `;
+
+  if (selectedGPUId !== null) {
+    renderGPUDetail();
+  }
+}
+
+function selectGPU(id) {
+  selectedGPUId = selectedGPUId === id ? null : id;
+  renderGPUTopo();
+}
+
+function renderGPUDetail() {
+  const cfg = gpuTopoConfigs[gpuTopoConfig];
+  const gpu = cfg.numaNodes.flatMap(n => n.gpus).find(g => g.id === selectedGPUId);
+  if (!gpu) return;
+
+  const panel = document.getElementById('gpuDetailInner');
+  const kvPct = Math.floor(gpu.util * 0.9 + Math.random() * 10);
+  const queueDepth = Math.floor(Math.random() * 8);
+  const inferenceRate = Math.floor(150 + Math.random() * 100);
+
+  panel.innerHTML = `
+    <div style="font-weight:700;margin-bottom:12px;color:var(--text-primary)">${gpu.label} Details</div>
+    <div class="gpu-detail-grid">
+      <div class="gpu-detail-item">
+        <div class="gpu-detail-item-label">Memory</div>
+        <div class="gpu-detail-item-value">${gpu.mem}</div>
+      </div>
+      <div class="gpu-detail-item">
+        <div class="gpu-detail-item-label">Utilization</div>
+        <div class="gpu-detail-item-value">${gpu.util}%</div>
+      </div>
+      <div class="gpu-detail-item">
+        <div class="gpu-detail-item-label">Temperature</div>
+        <div class="gpu-detail-item-value">${gpu.temp}&deg;C</div>
+      </div>
+      <div class="gpu-detail-item">
+        <div class="gpu-detail-item-label">KV-Cache Used</div>
+        <div class="gpu-detail-item-value">${kvPct}%</div>
+      </div>
+      <div class="gpu-detail-item">
+        <div class="gpu-detail-item-label">Queue Depth</div>
+        <div class="gpu-detail-item-value">${queueDepth} reqs</div>
+      </div>
+      <div class="gpu-detail-item">
+        <div class="gpu-detail-item-label">Throughput</div>
+        <div class="gpu-detail-item-value">${inferenceRate} tok/s</div>
+      </div>
+      <div class="gpu-detail-item">
+        <div class="gpu-detail-item-label">NUMA Node</div>
+        <div class="gpu-detail-item-value">${gpu.id < 4 ? '0' : '1'}</div>
+      </div>
+      <div class="gpu-detail-item">
+        <div class="gpu-detail-item-label">PCIe Bus</div>
+        <div class="gpu-detail-item-value">0000:${(gpu.id * 16 + 65).toString(16)}:00.0</div>
+      </div>
+    </div>
+  `;
+}
+
+renderGPUTopoPills();
+renderGPUTopo();
+
+
+/* ═══════════════════════════════════════════════════
+   Section 9: Cost Estimator
+   ═══════════════════════════════════════════════════ */
+const costState = {
+  gpuType: 'H100 SXM',
+  gpuCount: 8,
+  region: 'us-east',
+  hoursPerDay: 24,
+  includeStorage: true,
+  includeNetwork: true
+};
+
+const costData = {
+  'H100 SXM': { hourly: 3.50, name: 'NVIDIA H100 SXM 80GB' },
+  'H100 PCIe': { hourly: 2.80, name: 'NVIDIA H100 PCIe 80GB' },
+  'H200': { hourly: 4.50, name: 'NVIDIA H200 SXM 141GB' },
+  'B200': { hourly: 6.00, name: 'NVIDIA B200 SXM 192GB' },
+  'MI300X': { hourly: 3.20, name: 'AMD Instinct MI300X 192GB' }
+};
+
+const regionMultipliers = {
+  'us-east': { label: 'US East (Virginia)', mult: 1.0 },
+  'us-west': { label: 'US West (Oregon)', mult: 0.95 },
+  'eu-west': { label: 'EU West (Ireland)', mult: 1.12 },
+  'eu-central': { label: 'EU Central (Frankfurt)', mult: 1.15 },
+  'ap-south': { label: 'AP South (Mumbai)', mult: 0.88 }
+};
+
+function renderCostInputs() {
+  const container = document.getElementById('costInputs');
+  container.innerHTML = `
+    <div style="font-weight:700;font-size:1rem;margin-bottom:20px;color:var(--text-primary)">Configuration</div>
+    <div class="cost-field">
+      <div class="cost-field-label">GPU Type</div>
+      <select class="editor-select" onchange="costState.gpuType=this.value;renderCostOutput()">
+        ${Object.entries(costData).map(([id, d]) => `<option ${costState.gpuType === id ? 'selected' : ''} value="${id}">${d.name}</option>`).join('')}
+      </select>
+    </div>
+    <div class="cost-field">
+      <div class="cost-field-label">GPU Count</div>
+      <div class="editor-slider-row">
+        <input type="range" class="editor-slider" min="1" max="64" step="1" value="${costState.gpuCount}" oninput="costState.gpuCount=parseInt(this.value);document.getElementById('costGpuVal').textContent=this.value;renderCostOutput()">
+        <span class="editor-slider-value" id="costGpuVal">${costState.gpuCount}</span>
+      </div>
+    </div>
+    <div class="cost-field">
+      <div class="cost-field-label">Region</div>
+      <select class="editor-select" onchange="costState.region=this.value;renderCostOutput()">
+        ${Object.entries(regionMultipliers).map(([id, r]) => `<option ${costState.region === id ? 'selected' : ''} value="${id}">${r.label}</option>`).join('')}
+      </select>
+    </div>
+    <div class="cost-field">
+      <div class="cost-field-label">Hours per Day</div>
+      <div class="editor-slider-row">
+        <input type="range" class="editor-slider" min="1" max="24" step="1" value="${costState.hoursPerDay}" oninput="costState.hoursPerDay=parseInt(this.value);document.getElementById('costHoursVal').textContent=this.value+'h';renderCostOutput()">
+        <span class="editor-slider-value" id="costHoursVal">${costState.hoursPerDay}h</span>
+      </div>
+    </div>
+    <div class="editor-toggle-row" onclick="costState.includeStorage=!costState.includeStorage;renderCostInputs();renderCostOutput()">
+      <span class="editor-toggle-label">Include Storage</span>
+      <div class="toggle-switch ${costState.includeStorage ? 'on' : ''}"></div>
+    </div>
+    <div class="editor-toggle-row" onclick="costState.includeNetwork=!costState.includeNetwork;renderCostInputs();renderCostOutput()">
+      <span class="editor-toggle-label">Include Networking</span>
+      <div class="toggle-switch ${costState.includeNetwork ? 'on' : ''}"></div>
+    </div>
+  `;
+}
+
+function renderCostOutput() {
+  const container = document.getElementById('costOutput');
+  const gpu = costData[costState.gpuType];
+  const region = regionMultipliers[costState.region];
+
+  const gpuHourly = gpu.hourly * costState.gpuCount * region.mult;
+  const gpuMonthly = gpuHourly * costState.hoursPerDay * 30;
+
+  const storageCost = costState.includeStorage ? costState.gpuCount * 50 : 0;
+  const networkCost = costState.includeNetwork ? costState.gpuCount * 30 : 0;
+  const openShiftCost = Math.ceil(costState.gpuCount / 8) * 500;
+
+  const totalMonthly = gpuMonthly + storageCost + networkCost + openShiftCost;
+
+  const gpuPct = (gpuMonthly / totalMonthly * 100).toFixed(0);
+
+  container.innerHTML = `
+    <div class="cost-total">
+      <div class="cost-total-label">Estimated Monthly Cost</div>
+      <div class="cost-total-value">$${totalMonthly.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</div>
+      <div class="cost-total-period">${costState.hoursPerDay}h/day in ${region.label}</div>
+    </div>
+    <div class="cost-breakdown">
+      <div class="cost-breakdown-title">Cost Breakdown</div>
+      <div class="cost-line">
+        <span class="cost-line-label">GPU Compute (${costState.gpuCount}x ${costState.gpuType})</span>
+        <span class="cost-line-value">$${gpuMonthly.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+      </div>
+      <div class="cost-line">
+        <span class="cost-line-label">OpenShift License (${Math.ceil(costState.gpuCount / 8)} node${Math.ceil(costState.gpuCount / 8) > 1 ? 's' : ''})</span>
+        <span class="cost-line-value">$${openShiftCost.toLocaleString()}</span>
+      </div>
+      ${costState.includeStorage ? `
+      <div class="cost-line">
+        <span class="cost-line-label">Model Storage (NVMe / S3)</span>
+        <span class="cost-line-value">$${storageCost.toLocaleString()}</span>
+      </div>` : ''}
+      ${costState.includeNetwork ? `
+      <div class="cost-line">
+        <span class="cost-line-label">Networking (Ingress + InfiniBand)</span>
+        <span class="cost-line-value">$${networkCost.toLocaleString()}</span>
+      </div>` : ''}
+      <div class="cost-bar">
+        <div class="cost-bar-fill" style="width:${gpuPct}%;background:linear-gradient(90deg, var(--blue), var(--purple))"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px">
+        <span style="font-size:0.72rem;color:var(--blue)">GPU: ${gpuPct}%</span>
+        <span style="font-size:0.72rem;color:var(--text-muted)">Other: ${100 - parseInt(gpuPct)}%</span>
+      </div>
+    </div>
+    <div class="cost-notes">
+      Estimates are based on representative cloud GPU pricing and may vary by provider. OpenShift licensing cost is approximate. Actual costs depend on your specific contract terms and reserved capacity commitments.
+    </div>
+  `;
+}
+
+renderCostInputs();
+renderCostOutput();
 </script>
 </body>
 </html>

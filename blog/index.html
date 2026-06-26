@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OpenShift AI and llm-d: The Enterprise Path to Distributed LLM Inference</title>
-    <meta name="description" content="How llm-d, the CNCF Sandbox project for distributed LLM inference routing, powers Red Hat AI's enterprise inference stack on OpenShift.">
+    <meta name="description" content="A deeply technical guide to deploying llm-d on Red Hat OpenShift AI. Covers the LLMInferenceService CRD, GPU Operator, Node Feature Discovery, monitoring with Prometheus/Grafana, step-by-step deployment, troubleshooting, enterprise vs upstream comparison, and migration from standalone vLLM.">
     <meta name="author" content="Markell Rawls">
     <link rel="icon" type="image/png" href="https://llm-d.ai/img/llm-d-icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,15 +18,15 @@
         }
 
         :root {
-            --bg-primary: #0a0a0f;
-            --bg-card: #12121a;
-            --bg-code: #1a1a2e;
-            --bg-header: rgba(10, 10, 15, 0.85);
+            --bg-primary: #0a0e17;
+            --bg-card: #111827;
+            --bg-code: #0f172a;
+            --bg-header: rgba(10, 14, 23, 0.88);
             --text-primary: #e8e8f0;
             --text-secondary: #a0a0b8;
             --text-muted: #6b6b80;
             --accent: #3b82f6;
-            --accent-dim: rgba(59, 130, 246, 0.15);
+            --accent-dim: rgba(59, 130, 246, 0.12);
             --accent-hover: #5b9bf7;
             --border: rgba(255, 255, 255, 0.06);
             --border-accent: rgba(59, 130, 246, 0.3);
@@ -35,6 +35,7 @@
             --yaml-value-num: #fbbf24;
             --yaml-value-bool: #c084fc;
             --yaml-comment: #6b7280;
+            --red-hat: #ee0000;
             --font-heading: 'Red Hat Display', sans-serif;
             --font-body: 'Red Hat Text', sans-serif;
             --font-mono: 'Red Hat Mono', 'Fira Code', 'Consolas', monospace;
@@ -205,6 +206,10 @@
             line-height: 1.25;
         }
 
+        .article-body h2:first-child {
+            margin-top: 0;
+        }
+
         .article-body h3 {
             font-family: var(--font-heading);
             font-size: 1.35rem;
@@ -214,6 +219,15 @@
             margin-bottom: 0.75rem;
             letter-spacing: -0.01em;
             line-height: 1.3;
+        }
+
+        .article-body h4 {
+            font-family: var(--font-heading);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-top: 1.75rem;
+            margin-bottom: 0.5rem;
         }
 
         .article-body p {
@@ -267,6 +281,40 @@
             margin-bottom: 0;
         }
 
+        /* Info / Warning / Tip boxes */
+        .info-box {
+            background: var(--accent-dim);
+            border: 1px solid var(--border-accent);
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .info-box.warning {
+            background: rgba(234, 179, 8, 0.08);
+            border-color: rgba(234, 179, 8, 0.3);
+        }
+
+        .info-box .info-label {
+            font-family: var(--font-heading);
+            font-weight: 700;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--accent);
+            margin-bottom: 0.4rem;
+        }
+
+        .info-box.warning .info-label {
+            color: #eab308;
+        }
+
+        .info-box p {
+            margin-bottom: 0;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
         /* Code Blocks */
         .code-block {
             background: var(--bg-code);
@@ -313,6 +361,9 @@
         .yb { color: var(--yaml-value-bool); }
         .yc { color: var(--yaml-comment); font-style: italic; }
 
+        /* Shell prompt */
+        .sp { color: #22d3ee; }
+
         /* Inline Code */
         .article-body code {
             font-family: var(--font-mono);
@@ -324,143 +375,45 @@
         }
 
         /* Comparison Table */
-        .comparison-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
             margin: 1.5rem 0;
+            font-size: 0.92rem;
         }
 
-        .comparison-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-        }
-
-        .comparison-card h4 {
+        .comparison-table thead th {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 0.75rem 1rem;
+            text-align: left;
             font-family: var(--font-heading);
-            font-size: 1.1rem;
             font-weight: 700;
-            margin-bottom: 1rem;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .comparison-table thead th:nth-child(2) {
+            color: var(--accent);
+        }
+
+        .comparison-table thead th:nth-child(3) {
+            color: var(--red-hat);
+        }
+
+        .comparison-table tbody td {
+            padding: 0.65rem 1rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+            vertical-align: top;
+        }
+
+        .comparison-table tbody td:first-child {
+            font-weight: 600;
             color: var(--text-primary);
         }
 
-        .comparison-card.upstream h4 {
-            color: var(--accent);
-        }
-
-        .comparison-card.enterprise h4 {
-            color: #ef4444;
-        }
-
-        .comparison-card ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .comparison-card li {
-            padding: 0.4rem 0;
-            padding-left: 1.25rem;
-            position: relative;
-            font-size: 0.92rem;
-            color: var(--text-secondary);
-        }
-
-        .comparison-card li::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0.75rem;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-        }
-
-        .comparison-card.upstream li::before {
-            background: var(--accent);
-        }
-
-        .comparison-card.enterprise li::before {
-            background: #ef4444;
-        }
-
-        /* Release Timeline */
-        .release-timeline {
-            position: relative;
-            margin: 2rem 0;
-            padding-left: 2rem;
-        }
-
-        .release-timeline::before {
-            content: '';
-            position: absolute;
-            left: 6px;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            background: linear-gradient(180deg, var(--accent), #8b5cf6, var(--accent));
-            border-radius: 1px;
-        }
-
-        .release-item {
-            position: relative;
-            margin-bottom: 2rem;
-            padding: 1.25rem 1.5rem;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-        }
-
-        .release-item::before {
-            content: '';
-            position: absolute;
-            left: -2rem;
-            top: 1.5rem;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: var(--bg-primary);
-            border: 3px solid var(--accent);
-            z-index: 1;
-        }
-
-        .release-item h4 {
-            font-family: var(--font-heading);
-            font-weight: 700;
-            font-size: 1.1rem;
-            color: var(--accent);
-            margin-bottom: 0.25rem;
-        }
-
-        .release-item .release-date {
-            font-size: 0.82rem;
-            color: var(--text-muted);
-            margin-bottom: 0.75rem;
-        }
-
-        .release-item ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .release-item li {
-            padding: 0.3rem 0;
-            padding-left: 1rem;
-            position: relative;
-            font-size: 0.92rem;
-            color: var(--text-secondary);
-        }
-
-        .release-item li::before {
-            content: '+';
-            position: absolute;
-            left: 0;
-            color: var(--accent);
-            font-weight: 700;
-            font-family: var(--font-mono);
+        .comparison-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.02);
         }
 
         /* Steps */
@@ -503,6 +456,44 @@
             text-align: center;
         }
 
+        /* Troubleshooting Cards */
+        .troubleshoot-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.25rem 0;
+        }
+
+        .troubleshoot-card h4 {
+            font-family: var(--font-heading);
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #f87171;
+            margin-top: 0;
+            margin-bottom: 0.75rem;
+        }
+
+        .troubleshoot-card .symptom,
+        .troubleshoot-card .cause,
+        .troubleshoot-card .fix {
+            font-size: 0.92rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .troubleshoot-card .label {
+            font-weight: 700;
+            font-family: var(--font-heading);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-right: 0.5rem;
+        }
+
+        .troubleshoot-card .label.symptom-label { color: #fbbf24; }
+        .troubleshoot-card .label.cause-label { color: #f87171; }
+        .troubleshoot-card .label.fix-label { color: #34d399; }
+
         /* CTA Box */
         .cta-box {
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(139, 92, 246, 0.08));
@@ -544,6 +535,42 @@
         .cta-button:hover {
             background: var(--accent-hover);
             transform: translateY(-1px);
+        }
+
+        /* Migration mapping table */
+        .mapping-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.25rem 0;
+            font-size: 0.88rem;
+        }
+
+        .mapping-table thead th {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 0.6rem 0.75rem;
+            text-align: left;
+            font-family: var(--font-heading);
+            font-weight: 700;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .mapping-table tbody td {
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+            vertical-align: top;
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+        }
+
+        .mapping-table tbody td:last-child {
+            font-family: var(--font-body);
+            font-size: 0.88rem;
+        }
+
+        .mapping-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.02);
         }
 
         /* Footer */
@@ -612,10 +639,6 @@
                 gap: 0.75rem;
             }
 
-            .comparison-grid {
-                grid-template-columns: 1fr;
-            }
-
             .cta-box {
                 padding: 1.5rem;
             }
@@ -635,6 +658,18 @@
 
             .step {
                 padding-left: 3rem;
+            }
+
+            .comparison-table,
+            .mapping-table {
+                font-size: 0.82rem;
+            }
+
+            .comparison-table thead th,
+            .comparison-table tbody td,
+            .mapping-table thead th,
+            .mapping-table tbody td {
+                padding: 0.5rem 0.5rem;
             }
         }
 
@@ -673,6 +708,7 @@
         <nav class="header-nav">
             <a href="../">Interactive App</a>
             <a href="https://llm-d.ai">llm-d.ai</a>
+            <a href="https://github.com/llm-d" target="_blank" rel="noopener">GitHub</a>
         </nav>
     </div>
 </header>
@@ -686,6 +722,8 @@
         <span class="tag">Kubernetes</span>
         <span class="tag">Enterprise AI</span>
         <span class="tag">Inference</span>
+        <span class="tag">KServe</span>
+        <span class="tag">GPU Operator</span>
     </div>
     <h1>OpenShift AI and llm-d: The Enterprise Path to Distributed LLM Inference</h1>
     <div class="article-meta">
@@ -693,75 +731,1047 @@
         <span class="meta-separator"></span>
         <span>June 2026</span>
         <span class="meta-separator"></span>
-        <span>~12 min read</span>
+        <span>~30 min read</span>
     </div>
 </div>
 
 <!-- Article Body -->
 <article class="article-body">
 
-    <h2>Introduction</h2>
+    <h2>Introduction: Why Enterprise LLM Inference Is Hard</h2>
     <p>
-        There is a familiar pattern in enterprise technology: a demo that runs beautifully on a single machine crumbles the moment it faces real production traffic. Large language model inference is no exception. Getting a model to respond on your laptop is straightforward. Getting that same model to serve 10,000 concurrent users with sub-second time-to-first-token, guaranteed uptime, automatic scaling, and GPU cost efficiency is an entirely different engineering challenge.
+        There is a familiar pattern in enterprise technology: a demo that runs beautifully on a single machine crumbles the moment it faces real production traffic. Large language model inference is no exception. Getting a model to respond on your laptop is straightforward. Getting that same model to serve 10,000 concurrent users with sub-second time-to-first-token, contractual uptime guarantees, automatic scaling, and GPU cost efficiency that keeps your CFO from canceling the project is an entirely different engineering challenge.
     </p>
     <p>
-        The gap between "it works" and "it works at scale with SLAs" is where most organizations stall. Building production inference infrastructure from scratch means solving a cascade of hard problems: intelligent request routing, KV-cache management across distributed GPU pools, disaggregated prefill and decode scheduling, GPU topology-aware placement, autoscaling that responds to inference-specific signals rather than generic CPU metrics, and monitoring that surfaces the metrics that actually matter for LLM workloads.
+        The gap between "it works" and "it works at scale with SLAs" is where most organizations stall. Building production inference infrastructure from scratch means solving a cascade of hard problems simultaneously: intelligent request routing that understands inference semantics, KV-cache management across distributed GPU pools, disaggregated prefill and decode scheduling, GPU topology-aware placement that respects NVLink domains and NUMA boundaries, autoscaling that responds to inference-specific signals rather than generic CPU utilization, monitoring that surfaces the metrics that actually predict user-visible latency, and security hardening that satisfies compliance teams without destroying throughput.
     </p>
     <p>
-        This is precisely the space where the upstream-to-enterprise pipeline proves its value. <strong>llm-d</strong> is the <a href="https://www.cncf.io/" target="_blank" rel="noopener">CNCF</a> Sandbox open-source project purpose-built for distributed LLM inference routing. <strong>Red Hat AI</strong> (formerly OpenShift AI) is the enterprise product that takes llm-d upstream and makes it production-ready with support contracts, hardware certification, and deep integration across the Red Hat ecosystem. Together, they represent the most complete path from open-source innovation to enterprise-grade LLM infrastructure available today.
-    </p>
-
-    <h2>What Is Red Hat AI?</h2>
-    <p>
-        Red Hat AI is Red Hat's enterprise AI platform built on top of OpenShift, Red Hat's Kubernetes distribution. Previously branded as "OpenShift AI," it was rebranded to "Red Hat AI" to reflect a scope that extends well beyond the container orchestration layer into a full-lifecycle AI platform.
+        Most teams attempt this by stitching together vLLM, a load balancer, some GPU monitoring scripts, and a prayer. It works until it does not. The first 3 AM incident that requires understanding the interaction between KV-cache eviction, GPU memory fragmentation, and Kubernetes scheduling decisions reveals just how many sharp edges exist in a hand-assembled inference stack.
     </p>
     <p>
-        At its core, Red Hat AI brings together several capabilities under one unified platform:
+        This is precisely the space where the upstream-to-enterprise pipeline proves its value. <strong>llm-d</strong> is the <a href="https://www.cncf.io/" target="_blank" rel="noopener">CNCF</a> Sandbox open-source project purpose-built for distributed LLM inference routing. <strong>Red Hat AI</strong> (formerly OpenShift AI) is the enterprise product that takes llm-d upstream and makes it production-ready with support contracts, hardware certification, FIPS compliance, and deep integration across the Red Hat ecosystem. Together, they represent the most complete path from open-source innovation to enterprise-grade LLM infrastructure available today.
     </p>
-    <ul>
-        <li><strong>Model Serving</strong> &mdash; Powered by vLLM and llm-d under the hood, providing high-performance inference with intelligent routing, disaggregated serving, and KV-cache-aware scheduling. This component is officially called the <strong>Red Hat AI Inference Server</strong>.</li>
-        <li><strong>Model Registry</strong> &mdash; A centralized catalog for managing model artifacts, versions, and metadata across an organization.</li>
-        <li><strong>Training via InstructLab</strong> &mdash; An open-source approach to model fine-tuning that allows domain experts to contribute knowledge without needing deep ML expertise.</li>
-        <li><strong>GPU Management</strong> &mdash; Automatic GPU driver management, topology detection, and workload placement through the NVIDIA GPU Operator and Node Feature Discovery (NFD).</li>
-    </ul>
     <p>
-        Everything in Red Hat AI is Kubernetes-native. Models are deployed through Custom Resource Definitions (CRDs). Lifecycle management happens through operators and controllers. Monitoring flows through the same Prometheus and Grafana stack that teams already use for their other OpenShift workloads. This is not an AI platform bolted onto Kubernetes; it is an AI platform built <em>as</em> Kubernetes.
+        This article is a comprehensive technical guide. We will walk through the full stack: the CRDs that define inference workloads, the GPU infrastructure that powers them, the monitoring that keeps them observable, the deployment steps that bring them to life, the troubleshooting playbook for when things go wrong, and the migration path for organizations moving from standalone vLLM. By the end, you will have a concrete, operational understanding of how llm-d runs on OpenShift AI.
     </p>
 
-    <h2>The Upstream-to-Enterprise Pipeline</h2>
+    <h2>Deep Dive: KServe and the LLMInferenceService CRD</h2>
     <p>
-        If you have worked with Red Hat technologies before, the relationship between llm-d and Red Hat AI will feel familiar. It follows the same model that has powered enterprise open source for decades:
-    </p>
-    <blockquote>
-        <p>Linux kernel becomes RHEL. Kubernetes becomes OpenShift. llm-d becomes Red Hat AI Inference Server.</p>
-    </blockquote>
-    <p>
-        <strong>llm-d</strong> is the upstream CNCF Sandbox project. It is community-driven, fast-moving, and where bleeding-edge features land first. New routing strategies, experimental optimizations, and novel approaches to KV-cache management all debut in the llm-d project. The community iterates quickly, and the API surface evolves as the project learns from real-world deployments.
+        <a href="https://kserve.github.io/kserve/" target="_blank" rel="noopener">KServe</a> is the standard model serving framework on Kubernetes, providing a consistent API for deploying and managing machine learning models. Red Hat AI uses KServe as the foundation for its model serving capabilities. On top of KServe, the llm-d project introduces the <code>LLMInferenceService</code> Custom Resource Definition (CRD) &mdash; a purpose-built abstraction for deploying distributed LLM inference workloads.
     </p>
     <p>
-        <strong>Red Hat AI</strong> takes llm-d at specific points in its release cycle, certifies it against specific hardware configurations, tests it through Red Hat's extensive QE process, adds enterprise features like FIPS compliance and air-gapped deployment support, and ships it with 24/7 support. When customers deploy the Red Hat AI Inference Server, they are running llm-d with the confidence that it has been tested on their specific GPU hardware, validated against their OpenShift version, and backed by a support organization that can respond at 3 AM on a Saturday.
-    </p>
-    <p>
-        The pipeline flows both directions. Red Hat engineers are active contributors to the llm-d upstream project. Bug fixes discovered through enterprise testing flow back to the community. Performance optimizations validated at scale in customer environments become upstream features. The <code>LLMInferenceService</code> CRD itself was designed collaboratively to be the Kubernetes-native standard for deploying llm-d workloads, whether on vanilla Kubernetes or on OpenShift.
-    </p>
-    <p>
-        This bidirectional flow is what separates the Red Hat model from a simple vendor fork. The upstream project gets stronger because of enterprise feedback, and the enterprise product stays current because it tracks a healthy, active upstream community.
+        The <code>LLMInferenceService</code> CRD is the single declarative surface through which an operator defines everything about an inference deployment. A single YAML file replaces what would otherwise be dozens of manually coordinated Kubernetes resources: Deployments, Services, ConfigMaps, HorizontalPodAutoscalers, ServiceMonitors, and Route objects. The controller that watches this CRD reconciles all of these downstream resources automatically.
     </p>
 
-    <h2>Key Integration Points</h2>
-
-    <h3>KServe and the LLMInferenceService CRD</h3>
+    <h3>Basic Deployment</h3>
     <p>
-        <a href="https://kserve.github.io/kserve/" target="_blank" rel="noopener">KServe</a> is the standard model serving framework on Kubernetes, providing a consistent API for deploying and managing machine learning models. Red Hat AI uses KServe under the hood as the foundation for its model serving capabilities.
-    </p>
-    <p>
-        The primary API for deploying inference workloads is the <code>LLMInferenceService</code> CRD. This custom resource encapsulates everything needed to run a distributed LLM inference deployment: the model source, serving runtime configuration, GPU requirements, disaggregated serving topology, routing strategy, and autoscaling parameters. A single YAML file replaces what would otherwise be dozens of manually coordinated resources.
+        The simplest possible deployment provisions a single model on a set of replicas with straightforward round-robin routing. This is suitable for development, testing, or workloads where request volume is predictable and latency requirements are relaxed.
     </p>
 
     <div class="code-block">
         <div class="code-block-header">
             <span>yaml</span>
-            <span>llminferenceservice.yaml</span>
+            <span>basic-inference.yaml</span>
+        </div>
+<pre><code><span class="yk">apiVersion:</span> <span class="ys">serving.llm-d.ai/v1alpha1</span>
+<span class="yk">kind:</span> <span class="ys">LLMInferenceService</span>
+<span class="yk">metadata:</span>
+  <span class="yk">name:</span> <span class="ys">llama-3-8b</span>
+  <span class="yk">namespace:</span> <span class="ys">ai-inference</span>
+  <span class="yk">labels:</span>
+    <span class="yk">app.kubernetes.io/part-of:</span> <span class="ys">inference-platform</span>
+<span class="yk">spec:</span>
+  <span class="yc"># --- Model Source ---</span>
+  <span class="yk">model:</span>
+    <span class="yk">name:</span> <span class="ys">meta-llama/Llama-3.1-8B-Instruct</span>   <span class="yc"># HuggingFace model ID or custom name</span>
+    <span class="yk">source:</span>
+      <span class="yk">uri:</span> <span class="ys">pvc://model-store/llama-3-8b</span>        <span class="yc"># PVC-backed model storage</span>
+    <span class="yk">maxModelLen:</span> <span class="yn">8192</span>                          <span class="yc"># Max sequence length (context window)</span>
+    <span class="yk">dtype:</span> <span class="ys">float16</span>                               <span class="yc"># Model precision: float16, bfloat16, auto</span>
+
+  <span class="yc"># --- Serving Runtime ---</span>
+  <span class="yk">serving:</span>
+    <span class="yk">runtime:</span> <span class="ys">vllm</span>                                <span class="yc"># Inference engine: vllm is the default</span>
+    <span class="yk">replicas:</span> <span class="yn">2</span>                                  <span class="yc"># Number of inference pod replicas</span>
+    <span class="yk">resources:</span>
+      <span class="yk">gpu:</span> <span class="ys">nvidia.com/gpu</span>                        <span class="yc"># GPU resource name from device plugin</span>
+      <span class="yk">gpuCount:</span> <span class="yn">1</span>                                <span class="yc"># GPUs per replica (1 for 8B model)</span>
+      <span class="yk">memory:</span> <span class="ys">32Gi</span>                                <span class="yc"># CPU memory per replica</span>
+      <span class="yk">cpu:</span> <span class="ys">8</span>                                      <span class="yc"># CPU cores per replica</span>
+
+  <span class="yc"># --- Routing ---</span>
+  <span class="yk">routing:</span>
+    <span class="yk">endpoint:</span> <span class="ys">EPP</span>                                <span class="yc"># Endpoint Picker for intelligent routing</span>
+    <span class="yk">strategy:</span> <span class="ys">round-robin</span>                       <span class="yc"># Basic round-robin for simple workloads</span>
+
+  <span class="yc"># --- Autoscaling ---</span>
+  <span class="yk">autoscaling:</span>
+    <span class="yk">minReplicas:</span> <span class="yn">1</span>                               <span class="yc"># Minimum replicas (1 = never scale to zero)</span>
+    <span class="yk">maxReplicas:</span> <span class="yn">4</span>                               <span class="yc"># Maximum replicas ceiling</span>
+    <span class="yk">targetUtilization:</span> <span class="yn">80</span>                       <span class="yc"># Scale when utilization exceeds 80%</span></code></pre>
+    </div>
+
+    <p>
+        Every field has operational significance. The <code>model.source.uri</code> supports multiple schemes: <code>pvc://</code> for models stored on PersistentVolumeClaims, <code>s3://</code> for S3-compatible object storage, <code>oci://</code> for models packed as OCI container images, and <code>hf://</code> for direct download from HuggingFace Hub (not recommended for production due to startup latency and network dependency). The <code>maxModelLen</code> directly controls KV-cache memory allocation &mdash; setting this higher than necessary wastes GPU memory, while setting it too low truncates long conversations.
+    </p>
+    <p>
+        The <code>serving.resources.gpuCount</code> determines tensor parallelism. For an 8B parameter model in float16 (roughly 16 GB of weights), a single GPU with 80 GB of VRAM is more than sufficient. The remaining GPU memory becomes available for KV-cache, which directly determines how many concurrent requests the replica can handle.
+    </p>
+
+    <h3>Disaggregated Serving Deployment</h3>
+    <p>
+        Disaggregated serving splits the inference pipeline into two distinct phases: <strong>prefill</strong> (processing the input prompt and building the initial KV-cache) and <strong>decode</strong> (generating output tokens autoregressively). These two phases have fundamentally different compute profiles. Prefill is compute-bound and benefits from high FLOPS. Decode is memory-bandwidth-bound and benefits from high memory throughput. By running them on separate replica pools, each can be optimized independently.
+    </p>
+
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>yaml</span>
+            <span>disaggregated-inference.yaml</span>
+        </div>
+<pre><code><span class="yk">apiVersion:</span> <span class="ys">serving.llm-d.ai/v1alpha1</span>
+<span class="yk">kind:</span> <span class="ys">LLMInferenceService</span>
+<span class="yk">metadata:</span>
+  <span class="yk">name:</span> <span class="ys">llama-3-70b-disagg</span>
+  <span class="yk">namespace:</span> <span class="ys">ai-inference</span>
+<span class="yk">spec:</span>
+  <span class="yk">model:</span>
+    <span class="yk">name:</span> <span class="ys">meta-llama/Llama-3.1-70B-Instruct</span>
+    <span class="yk">source:</span>
+      <span class="yk">uri:</span> <span class="ys">pvc://model-store/llama-3-70b</span>
+    <span class="yk">maxModelLen:</span> <span class="yn">32768</span>
+    <span class="yk">dtype:</span> <span class="ys">bfloat16</span>
+
+  <span class="yk">serving:</span>
+    <span class="yk">runtime:</span> <span class="ys">vllm</span>
+    <span class="yk">resources:</span>
+      <span class="yk">gpu:</span> <span class="ys">nvidia.com/gpu</span>
+      <span class="yk">gpuCount:</span> <span class="yn">4</span>                                <span class="yc"># 4-way tensor parallelism per replica</span>
+      <span class="yk">gpuType:</span> <span class="ys">H100-SXM</span>                            <span class="yc"># Require SXM form factor for NVLink</span>
+      <span class="yk">memory:</span> <span class="ys">128Gi</span>
+      <span class="yk">cpu:</span> <span class="ys">32</span>
+
+    <span class="yc"># --- Disaggregated Serving Config ---</span>
+    <span class="yk">disaggregated:</span>
+      <span class="yk">enabled:</span> <span class="yb">true</span>                               <span class="yc"># Enable prefill/decode splitting</span>
+      <span class="yk">prefillReplicas:</span> <span class="yn">2</span>                          <span class="yc"># Dedicated prefill workers</span>
+      <span class="yk">decodeReplicas:</span> <span class="yn">4</span>                           <span class="yc"># Dedicated decode workers</span>
+      <span class="yk">kvTransferMethod:</span> <span class="ys">nccl</span>                     <span class="yc"># KV-cache transfer: nccl, tcp, rdma</span>
+
+  <span class="yk">routing:</span>
+    <span class="yk">endpoint:</span> <span class="ys">EPP</span>
+    <span class="yk">strategy:</span> <span class="ys">kv-cache-aware</span>                    <span class="yc"># Route based on KV-cache state</span>
+    <span class="yk">prefixCacheAware:</span> <span class="yb">true</span>                      <span class="yc"># Reuse prefix cache across requests</span>
+
+  <span class="yk">autoscaling:</span>
+    <span class="yk">minReplicas:</span> <span class="yn">2</span>
+    <span class="yk">maxReplicas:</span> <span class="yn">12</span>
+    <span class="yk">targetUtilization:</span> <span class="yn">70</span>
+    <span class="yk">scaleUpStabilization:</span> <span class="yn">60</span>                   <span class="yc"># Seconds to wait before scaling up</span>
+    <span class="yk">scaleDownStabilization:</span> <span class="yn">300</span>                <span class="yc"># Seconds to wait before scaling down</span>
+    <span class="yk">metric:</span> <span class="ys">queue-depth</span>                          <span class="yc"># Scale on queue depth, not CPU</span></code></pre>
+    </div>
+
+    <p>
+        The ratio of prefill to decode replicas matters. Prefill is computationally expensive but fast per-request (it processes the entire prompt in one forward pass). Decode is cheaper per-step but handles many concurrent, long-running generation streams. A common starting ratio is 1:2 (prefill:decode) and is adjusted based on observed workload characteristics. The <code>kvTransferMethod</code> controls how KV-cache state moves from prefill to decode workers &mdash; <code>nccl</code> uses NVIDIA Collective Communication Library for high-bandwidth GPU-to-GPU transfer, while <code>tcp</code> falls back to standard networking when GPUs are not on the same interconnect fabric.
+    </p>
+    <p>
+        The autoscaling <code>metric</code> field is critical. Default Kubernetes HPA scales on CPU utilization, which is nearly meaningless for GPU inference workloads. Setting <code>metric: queue-depth</code> tells the autoscaler to watch the number of pending requests, which directly correlates with user-visible latency. The stabilization windows prevent thrashing: <code>scaleUpStabilization: 60</code> means the system must see sustained high demand for 60 seconds before adding replicas, and <code>scaleDownStabilization: 300</code> provides a 5-minute cooldown before removing them.
+    </p>
+
+    <h3>Multi-LoRA Deployment</h3>
+    <p>
+        LoRA (Low-Rank Adaptation) adapters allow a single base model to serve multiple fine-tuned variants without loading separate copies of the full model weights. This is extraordinarily GPU-efficient: rather than allocating 140 GB of VRAM per fine-tuned model, you load the base model once and swap lightweight adapters (typically 50-200 MB each) per request.
+    </p>
+
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>yaml</span>
+            <span>multi-lora-inference.yaml</span>
+        </div>
+<pre><code><span class="yk">apiVersion:</span> <span class="ys">serving.llm-d.ai/v1alpha1</span>
+<span class="yk">kind:</span> <span class="ys">LLMInferenceService</span>
+<span class="yk">metadata:</span>
+  <span class="yk">name:</span> <span class="ys">llama-3-70b-multi-lora</span>
+  <span class="yk">namespace:</span> <span class="ys">ai-inference</span>
+<span class="yk">spec:</span>
+  <span class="yk">model:</span>
+    <span class="yk">name:</span> <span class="ys">meta-llama/Llama-3.1-70B-Instruct</span>
+    <span class="yk">source:</span>
+      <span class="yk">uri:</span> <span class="ys">pvc://model-store/llama-3-70b</span>
+    <span class="yk">maxModelLen:</span> <span class="yn">16384</span>
+    <span class="yk">dtype:</span> <span class="ys">bfloat16</span>
+    <span class="yk">loraAdapters:</span>                                 <span class="yc"># List of LoRA adapters to load</span>
+      - <span class="yk">name:</span> <span class="ys">customer-support-v2</span>
+        <span class="yk">source:</span> <span class="ys">pvc://lora-store/customer-support-v2</span>
+        <span class="yk">maxLoraRank:</span> <span class="yn">64</span>
+      - <span class="yk">name:</span> <span class="ys">code-assist-v1</span>
+        <span class="yk">source:</span> <span class="ys">pvc://lora-store/code-assist-v1</span>
+        <span class="yk">maxLoraRank:</span> <span class="yn">32</span>
+      - <span class="yk">name:</span> <span class="ys">legal-review-v3</span>
+        <span class="yk">source:</span> <span class="ys">pvc://lora-store/legal-review-v3</span>
+        <span class="yk">maxLoraRank:</span> <span class="yn">64</span>
+
+  <span class="yk">serving:</span>
+    <span class="yk">runtime:</span> <span class="ys">vllm</span>
+    <span class="yk">replicas:</span> <span class="yn">4</span>
+    <span class="yk">resources:</span>
+      <span class="yk">gpu:</span> <span class="ys">nvidia.com/gpu</span>
+      <span class="yk">gpuCount:</span> <span class="yn">4</span>
+      <span class="yk">gpuType:</span> <span class="ys">H100-SXM</span>
+      <span class="yk">memory:</span> <span class="ys">128Gi</span>
+      <span class="yk">cpu:</span> <span class="ys">32</span>
+
+  <span class="yk">routing:</span>
+    <span class="yk">endpoint:</span> <span class="ys">EPP</span>
+    <span class="yk">strategy:</span> <span class="ys">lora-affinity</span>                     <span class="yc"># Route by adapter affinity</span>
+
+  <span class="yk">autoscaling:</span>
+    <span class="yk">minReplicas:</span> <span class="yn">2</span>
+    <span class="yk">maxReplicas:</span> <span class="yn">8</span>
+    <span class="yk">targetUtilization:</span> <span class="yn">75</span></code></pre>
+    </div>
+
+    <p>
+        The <code>routing.strategy: lora-affinity</code> is key. When a request arrives specifying the <code>customer-support-v2</code> adapter, the EPP routes it to a replica that already has that adapter loaded in GPU memory, avoiding adapter swap overhead. If no replica has the adapter warm, the EPP selects the replica with the lowest current load and triggers an adapter load. The <code>maxLoraRank</code> controls the adapter size &mdash; higher ranks enable more expressive fine-tuning but consume more GPU memory.
+    </p>
+
+    <h2>OpenShift GPU Operator Deep Dive</h2>
+    <p>
+        Every distributed inference deployment is, at its foundation, a GPU orchestration problem. The OpenShift <strong>GPU Operator</strong> manages the complete lifecycle of NVIDIA GPU software on every node in the cluster. It eliminates the historically painful process of manually installing drivers, CUDA toolkits, and container runtime hooks on bare-metal GPU nodes.
+    </p>
+
+    <h3>ClusterPolicy CRD</h3>
+    <p>
+        The GPU Operator is configured through the <code>ClusterPolicy</code> CRD. This single resource defines the desired state for GPU software across the entire cluster:
+    </p>
+
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>yaml</span>
+            <span>cluster-policy.yaml</span>
+        </div>
+<pre><code><span class="yk">apiVersion:</span> <span class="ys">nvidia.com/v1</span>
+<span class="yk">kind:</span> <span class="ys">ClusterPolicy</span>
+<span class="yk">metadata:</span>
+  <span class="yk">name:</span> <span class="ys">gpu-cluster-policy</span>
+<span class="yk">spec:</span>
+  <span class="yk">operator:</span>
+    <span class="yk">defaultRuntime:</span> <span class="ys">crio</span>                        <span class="yc"># OpenShift uses CRI-O, not containerd</span>
+  <span class="yk">driver:</span>
+    <span class="yk">enabled:</span> <span class="yb">true</span>
+    <span class="yk">version:</span> <span class="ys">550.127.08</span>                         <span class="yc"># NVIDIA driver version</span>
+    <span class="yk">upgradePolicy:</span>
+      <span class="yk">autoUpgrade:</span> <span class="yb">true</span>                           <span class="yc"># Enable rolling driver upgrades</span>
+      <span class="yk">maxParallelUpgrades:</span> <span class="yn">1</span>                     <span class="yc"># One node at a time</span>
+      <span class="yk">maxUnavailable:</span> <span class="ys">25%</span>                        <span class="yc"># Max nodes unavailable during upgrade</span>
+      <span class="yk">waitForCompletion:</span>
+        <span class="yk">timeoutSeconds:</span> <span class="yn">0</span>                        <span class="yc"># 0 = no timeout, wait for completion</span>
+      <span class="yk">podDeletion:</span>
+        <span class="yk">force:</span> <span class="yb">false</span>                               <span class="yc"># Don't force-delete running pods</span>
+        <span class="yk">timeoutSeconds:</span> <span class="yn">300</span>                       <span class="yc"># Wait 5 min for graceful termination</span>
+        <span class="yk">deleteEmptyDir:</span> <span class="yb">false</span>
+  <span class="yk">toolkit:</span>
+    <span class="yk">enabled:</span> <span class="yb">true</span>                                  <span class="yc"># NVIDIA Container Toolkit for GPU passthrough</span>
+  <span class="yk">devicePlugin:</span>
+    <span class="yk">enabled:</span> <span class="yb">true</span>                                  <span class="yc"># Kubernetes Device Plugin for nvidia.com/gpu</span>
+  <span class="yk">dcgmExporter:</span>
+    <span class="yk">enabled:</span> <span class="yb">true</span>                                  <span class="yc"># DCGM metrics exporter for Prometheus</span>
+  <span class="yk">gfd:</span>
+    <span class="yk">enabled:</span> <span class="yb">true</span>                                  <span class="yc"># GPU Feature Discovery for node labels</span>
+  <span class="yk">mig:</span>
+    <span class="yk">strategy:</span> <span class="ys">single</span>                              <span class="yc"># MIG strategy: single, mixed, or none</span></code></pre>
+    </div>
+
+    <h3>How the GPU Operator Works</h3>
+    <p>
+        The GPU Operator deploys as a DaemonSet-based architecture. When a new GPU node joins the cluster, the operator detects it and deploys a stack of components in a specific order:
+    </p>
+    <ol>
+        <li><strong>NVIDIA Driver Container</strong> &mdash; A privileged container that compiles and installs the NVIDIA kernel driver on the host OS. This runs as a DaemonSet pod on every GPU node. The driver container approach means the host OS never needs manual driver installation, and driver versions are managed declaratively through the ClusterPolicy.</li>
+        <li><strong>NVIDIA Container Toolkit</strong> &mdash; Configures the CRI-O container runtime (OpenShift's container runtime) to pass GPU devices into containers. It installs the <code>nvidia-container-runtime-hook</code> that intercepts container creation calls and injects the necessary device files and libraries.</li>
+        <li><strong>Kubernetes Device Plugin</strong> &mdash; Registers <code>nvidia.com/gpu</code> as a schedulable resource with the kubelet. When a pod requests <code>nvidia.com/gpu: 4</code>, the device plugin allocates four specific GPU devices and makes them available inside the container.</li>
+        <li><strong>GPU Feature Discovery (GFD)</strong> &mdash; Inspects the physical GPU hardware and applies Kubernetes node labels describing the GPU model, memory, driver version, CUDA version, and hardware capabilities. These labels are critical for scheduling.</li>
+        <li><strong>DCGM Exporter</strong> &mdash; Exposes GPU metrics (utilization, temperature, memory usage, ECC errors, power draw) as Prometheus metrics, scraped automatically by OpenShift's monitoring stack.</li>
+    </ol>
+
+    <h3>Driver Upgrades Without Node Drain</h3>
+    <p>
+        The <code>upgradePolicy</code> in the ClusterPolicy enables rolling driver upgrades without manual node draining. When a new driver version is set, the operator proceeds node-by-node: it cordons the node to prevent new pod scheduling, gracefully evicts GPU workloads (respecting PodDisruptionBudgets), updates the driver container to the new version, validates that the driver loads correctly, and then uncordons the node. The <code>maxParallelUpgrades: 1</code> ensures only one node is being upgraded at a time, maintaining cluster capacity during the process. The <code>maxUnavailable: 25%</code> acts as a circuit breaker: if more than 25% of GPU nodes are unhealthy, the upgrade pauses automatically.
+    </p>
+
+    <h2>Node Feature Discovery and GPU Topology-Aware Scheduling</h2>
+    <p>
+        Getting GPU workloads to run is table stakes. Getting them to run on the <em>right</em> GPUs is where performance is won or lost. Node Feature Discovery (NFD) is the operator that bridges the gap between physical hardware topology and Kubernetes scheduling decisions.
+    </p>
+
+    <h3>GPU Node Labels</h3>
+    <p>
+        When NFD and GPU Feature Discovery run on a node with NVIDIA H100 SXM GPUs, they generate labels like the following:
+    </p>
+
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>shell</span>
+            <span>Node labels on an H100 GPU node</span>
+        </div>
+<pre><code><span class="sp">$</span> oc get node gpu-node-01 -o json | jq '.metadata.labels | to_entries[] | select(.key | startswith("nvidia.com") or startswith("feature.node.kubernetes.io/pci"))'
+
+<span class="yk">nvidia.com/gpu.product</span>=<span class="ys">NVIDIA-H100-SXM-80GB</span>
+<span class="yk">nvidia.com/gpu.memory</span>=<span class="yn">81920</span>                      <span class="yc"># GPU memory in MiB</span>
+<span class="yk">nvidia.com/gpu.count</span>=<span class="yn">8</span>                            <span class="yc"># Total GPUs on node</span>
+<span class="yk">nvidia.com/gpu.family</span>=<span class="ys">hopper</span>                     <span class="yc"># GPU architecture family</span>
+<span class="yk">nvidia.com/gpu.compute.major</span>=<span class="yn">9</span>                   <span class="yc"># CUDA compute capability major</span>
+<span class="yk">nvidia.com/gpu.compute.minor</span>=<span class="yn">0</span>                   <span class="yc"># CUDA compute capability minor</span>
+<span class="yk">nvidia.com/cuda.driver.major</span>=<span class="yn">550</span>                 <span class="yc"># Driver version major</span>
+<span class="yk">nvidia.com/cuda.runtime.major</span>=<span class="yn">12</span>                <span class="yc"># CUDA runtime major</span>
+<span class="yk">nvidia.com/gpu.deploy.driver</span>=<span class="yb">true</span>
+<span class="yk">nvidia.com/gpu.deploy.device-plugin</span>=<span class="yb">true</span>
+<span class="yk">nvidia.com/gpu.deploy.dcgm-exporter</span>=<span class="yb">true</span>
+<span class="yk">feature.node.kubernetes.io/pci-10de.present</span>=<span class="yb">true</span>   <span class="yc"># NVIDIA PCI vendor ID</span>
+<span class="yk">feature.node.kubernetes.io/cpu-model.vendor_id</span>=<span class="ys">Intel</span>
+<span class="yk">feature.node.kubernetes.io/system-os_release.ID</span>=<span class="ys">rhcos</span></code></pre>
+    </div>
+
+    <h3>Topology-Aware Scheduling for Tensor Parallelism</h3>
+    <p>
+        When an <code>LLMInferenceService</code> specifies <code>gpuCount: 4</code> for a 70B model, those four GPUs must be on the same NVLink domain for efficient tensor-parallel communication. NVLink provides 900 GB/s bidirectional bandwidth between GPUs in the same domain, compared to 64 GB/s over PCIe Gen5. Running tensor parallelism over PCIe instead of NVLink can degrade throughput by 3-5x.
+    </p>
+    <p>
+        The Kubernetes scheduler uses the GPU node labels and the NVIDIA device plugin's topology awareness to ensure that when a pod requests four GPUs, it receives four GPUs that share an NVLink mesh. On an 8-GPU H100 SXM node, GPUs are typically arranged in two NVLink domains of four GPUs each, corresponding to the two CPU sockets and their NUMA nodes.
+    </p>
+    <p>
+        For workloads that need explicit control over topology spread, the CRD supports standard Kubernetes <code>topologySpreadConstraints</code> and <code>nodeAffinity</code> rules. For example, to ensure prefill and decode replicas do not compete for GPUs on the same node:
+    </p>
+
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>yaml</span>
+            <span>Topology spread for inference pods</span>
+        </div>
+<pre><code><span class="yk">spec:</span>
+  <span class="yk">serving:</span>
+    <span class="yk">podTemplate:</span>
+      <span class="yk">spec:</span>
+        <span class="yk">topologySpreadConstraints:</span>
+          - <span class="yk">maxSkew:</span> <span class="yn">1</span>
+            <span class="yk">topologyKey:</span> <span class="ys">kubernetes.io/hostname</span>
+            <span class="yk">whenUnsatisfiable:</span> <span class="ys">DoNotSchedule</span>
+            <span class="yk">labelSelector:</span>
+              <span class="yk">matchLabels:</span>
+                <span class="yk">app:</span> <span class="ys">llama-3-70b-disagg</span>
+        <span class="yk">nodeSelector:</span>
+          <span class="yk">nvidia.com/gpu.product:</span> <span class="ys">NVIDIA-H100-SXM-80GB</span>
+          <span class="yk">nvidia.com/gpu.count:</span> <span class="ys">"8"</span>                <span class="yc"># Only schedule on 8-GPU nodes</span></code></pre>
+    </div>
+
+    <p>
+        The <code>nodeSelector</code> restricts scheduling to nodes with the exact GPU model and count. The <code>topologySpreadConstraints</code> with <code>maxSkew: 1</code> ensures replicas are evenly distributed across physical nodes. The <code>DoNotSchedule</code> policy means the pod stays Pending rather than landing on a suboptimal node &mdash; a deliberate choice, because running a tensor-parallel workload on mismatched GPU topology produces worse results than not running it at all.
+    </p>
+
+    <h2>Monitoring Integration: Prometheus, Grafana, and Alerting</h2>
+    <p>
+        LLM inference generates a set of operational signals that generic application monitoring does not capture. Standard dashboards that show CPU, memory, and network utilization tell you almost nothing about whether your inference service is healthy. What matters is <em>inference-specific</em> telemetry: latency distributions, cache utilization, queue dynamics, and GPU memory pressure.
+    </p>
+    <p>
+        The llm-d inference stack (built on vLLM) exposes a rich set of Prometheus metrics. OpenShift's built-in Prometheus instance scrapes these automatically through ServiceMonitor resources that the LLMInferenceService controller creates. No manual scrape configuration is required.
+    </p>
+
+    <h3>Key PromQL Queries</h3>
+
+    <h4>Time-to-First-Token P99</h4>
+    <p>
+        TTFT is the single most important metric for user-perceived responsiveness. It measures the time from when a request arrives to when the first output token is generated. A P99 above 500ms usually indicates either KV-cache saturation or insufficient prefill capacity.
+    </p>
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>promql</span>
+            <span>P99 Time-to-First-Token</span>
+        </div>
+<pre><code>histogram_quantile(0.99,
+  sum(rate(vllm:time_to_first_token_seconds_bucket{
+    namespace="ai-inference",
+    model_name="llama-3-70b"
+  }[5m])) by (le)
+)</code></pre>
+    </div>
+
+    <h4>Inter-Token Latency P95</h4>
+    <p>
+        ITL measures the gap between successive output tokens during streaming decode. Spikes here cause visible "stuttering" in real-time streaming responses. Sustained ITL above 100ms is perceptible to users.
+    </p>
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>promql</span>
+            <span>P95 Inter-Token Latency</span>
+        </div>
+<pre><code>histogram_quantile(0.95,
+  sum(rate(vllm:inter_token_latency_seconds_bucket{
+    namespace="ai-inference",
+    model_name="llama-3-70b"
+  }[5m])) by (le)
+)</code></pre>
+    </div>
+
+    <h4>KV-Cache Utilization per Replica</h4>
+    <p>
+        KV-cache utilization is the leading indicator for capacity exhaustion. When a replica's KV-cache is full, new requests must wait for existing sequences to complete, directly increasing queue depth and TTFT.
+    </p>
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>promql</span>
+            <span>KV-Cache Utilization %</span>
+        </div>
+<pre><code>vllm:gpu_cache_usage_perc{
+  namespace="ai-inference",
+  model_name="llama-3-70b"
+} * 100</code></pre>
+    </div>
+
+    <h4>Request Queue Depth</h4>
+    <p>
+        Queue depth is the number of requests waiting for an inference slot. This metric should trigger scaling decisions. A sustained queue depth greater than zero means requests are being delayed.
+    </p>
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>promql</span>
+            <span>Request Queue Depth</span>
+        </div>
+<pre><code>sum(vllm:num_requests_waiting{
+  namespace="ai-inference",
+  model_name="llama-3-70b"
+}) by (pod)</code></pre>
+    </div>
+
+    <h4>GPU Memory Utilization</h4>
+    <p>
+        GPU memory utilization from DCGM, correlated with inference metrics, reveals whether the system is memory-bound (high memory, low compute utilization) or compute-bound (high compute, moderate memory).
+    </p>
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>promql</span>
+            <span>GPU Memory Utilization %</span>
+        </div>
+<pre><code>DCGM_FI_DEV_FB_USED{namespace="ai-inference"}
+/ on(pod, gpu)
+DCGM_FI_DEV_FB_FREE{namespace="ai-inference"}
+* 100</code></pre>
+    </div>
+
+    <h3>Alerting Rules</h3>
+    <p>
+        Alerting on inference workloads requires inference-specific thresholds. Generic "CPU above 90%" alerts are useless here. The following PrometheusRule resource defines alerts that map to actual user-impact scenarios:
+    </p>
+
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>yaml</span>
+            <span>inference-alerts.yaml</span>
+        </div>
+<pre><code><span class="yk">apiVersion:</span> <span class="ys">monitoring.coreos.com/v1</span>
+<span class="yk">kind:</span> <span class="ys">PrometheusRule</span>
+<span class="yk">metadata:</span>
+  <span class="yk">name:</span> <span class="ys">llm-inference-alerts</span>
+  <span class="yk">namespace:</span> <span class="ys">ai-inference</span>
+<span class="yk">spec:</span>
+  <span class="yk">groups:</span>
+    - <span class="yk">name:</span> <span class="ys">llm-inference.rules</span>
+      <span class="yk">rules:</span>
+        <span class="yc"># TTFT SLA breach: P99 > 500ms for 5 minutes</span>
+        - <span class="yk">alert:</span> <span class="ys">HighTimeToFirstToken</span>
+          <span class="yk">expr:</span> <span class="ys">|</span>
+            histogram_quantile(0.99,
+              sum(rate(vllm:time_to_first_token_seconds_bucket[5m])) by (le, model_name)
+            ) > 0.5
+          <span class="yk">for:</span> <span class="ys">5m</span>
+          <span class="yk">labels:</span>
+            <span class="yk">severity:</span> <span class="ys">critical</span>
+          <span class="yk">annotations:</span>
+            <span class="yk">summary:</span> <span class="ys">"TTFT P99 exceeds 500ms for {{ $labels.model_name }}"</span>
+            <span class="yk">description:</span> <span class="ys">"Time-to-first-token P99 is {{ $value | humanize }}s. Check KV-cache utilization and prefill replica count."</span>
+
+        <span class="yc"># KV-cache saturation: any replica above 90%</span>
+        - <span class="yk">alert:</span> <span class="ys">KVCacheSaturation</span>
+          <span class="yk">expr:</span> <span class="ys">vllm:gpu_cache_usage_perc > 0.9</span>
+          <span class="yk">for:</span> <span class="ys">3m</span>
+          <span class="yk">labels:</span>
+            <span class="yk">severity:</span> <span class="ys">warning</span>
+          <span class="yk">annotations:</span>
+            <span class="yk">summary:</span> <span class="ys">"KV-cache above 90% on {{ $labels.pod }}"</span>
+            <span class="yk">description:</span> <span class="ys">"KV-cache utilization is {{ $value | humanizePercentage }}. New requests will queue. Consider scaling replicas or reducing maxModelLen."</span>
+
+        <span class="yc"># Queue depth: requests waiting for more than 2 minutes</span>
+        - <span class="yk">alert:</span> <span class="ys">InferenceQueueBacklog</span>
+          <span class="yk">expr:</span> <span class="ys">sum(vllm:num_requests_waiting) by (model_name) > 10</span>
+          <span class="yk">for:</span> <span class="ys">2m</span>
+          <span class="yk">labels:</span>
+            <span class="yk">severity:</span> <span class="ys">warning</span>
+          <span class="yk">annotations:</span>
+            <span class="yk">summary:</span> <span class="ys">"Inference queue backlog for {{ $labels.model_name }}"</span>
+            <span class="yk">description:</span> <span class="ys">"{{ $value }} requests queued. Autoscaler should be increasing replicas. If this persists, check maxReplicas ceiling."</span>
+
+        <span class="yc"># GPU memory exhaustion: DCGM reports > 95% FB usage</span>
+        - <span class="yk">alert:</span> <span class="ys">GPUMemoryExhaustion</span>
+          <span class="yk">expr:</span> <span class="ys">|</span>
+            DCGM_FI_DEV_FB_USED / (DCGM_FI_DEV_FB_USED + DCGM_FI_DEV_FB_FREE) > 0.95
+          <span class="yk">for:</span> <span class="ys">5m</span>
+          <span class="yk">labels:</span>
+            <span class="yk">severity:</span> <span class="ys">critical</span>
+          <span class="yk">annotations:</span>
+            <span class="yk">summary:</span> <span class="ys">"GPU memory above 95% on {{ $labels.pod }}"</span>
+            <span class="yk">description:</span> <span class="ys">"GPU {{ $labels.gpu }} is near memory exhaustion. Risk of OOM. Reduce maxModelLen, batch size, or add replicas."</span></code></pre>
+    </div>
+
+    <h3>Grafana Dashboard Snippet</h3>
+    <p>
+        Red Hat AI ships with pre-built Grafana dashboards for inference observability. The following JSON snippet shows the panel configuration for a TTFT P99 time-series panel that you can import into any Grafana instance:
+    </p>
+
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>json</span>
+            <span>Grafana panel: TTFT P99</span>
+        </div>
+<pre><code>{
+  "title": "Time-to-First-Token P99",
+  "type": "timeseries",
+  "datasource": { "type": "prometheus", "uid": "openshift-monitoring" },
+  "targets": [
+    {
+      "expr": "histogram_quantile(0.99, sum(rate(vllm:time_to_first_token_seconds_bucket{namespace=\"ai-inference\"}[5m])) by (le, model_name))",
+      "legendFormat": "{{ model_name }}",
+      "refId": "A"
+    }
+  ],
+  "fieldConfig": {
+    "defaults": {
+      "unit": "s",
+      "thresholds": {
+        "steps": [
+          { "value": 0, "color": "green" },
+          { "value": 0.3, "color": "yellow" },
+          { "value": 0.5, "color": "red" }
+        ]
+      }
+    }
+  },
+  "options": {
+    "tooltip": { "mode": "multi" },
+    "legend": { "displayMode": "table", "placement": "bottom" }
+  }
+}</code></pre>
+    </div>
+
+    <h2>Step-by-Step Deployment Walkthrough</h2>
+    <p>
+        This section traces the concrete steps to go from an OpenShift cluster with GPU nodes to a production inference endpoint serving traffic. Every command is shown with its expected output.
+    </p>
+
+    <h3>Step 1: Install the Red Hat AI Operator</h3>
+    <p>
+        The Red Hat AI operator is installed from OperatorHub. This deploys the controllers that understand the LLMInferenceService CRD and manage the inference lifecycle.
+    </p>
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>shell</span>
+            <span>Install Red Hat AI operator</span>
+        </div>
+<pre><code><span class="yc"># Create the operator namespace</span>
+<span class="sp">$</span> oc create namespace redhat-ai-operator
+
+<span class="yc"># Apply the operator subscription</span>
+<span class="sp">$</span> oc apply -f - &lt;&lt;EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: redhat-ai-operator
+  namespace: openshift-operators
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: redhat-ai-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+
+<span class="yc"># Verify the operator pod is running</span>
+<span class="sp">$</span> oc get pods -n openshift-operators -l app=redhat-ai-operator
+NAME                                    READY   STATUS    RESTARTS   AGE
+redhat-ai-operator-6d8f9b7c4d-x2k9m    1/1     Running   0          2m15s</code></pre>
+    </div>
+
+    <h3>Step 2: Configure the GPU Operator</h3>
+    <p>
+        If the GPU Operator is not already installed, install it and apply the ClusterPolicy:
+    </p>
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>shell</span>
+            <span>Configure GPU Operator</span>
+        </div>
+<pre><code><span class="yc"># Install the GPU Operator (if not already present)</span>
+<span class="sp">$</span> oc apply -f - &lt;&lt;EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: gpu-operator-certified
+  namespace: nvidia-gpu-operator
+spec:
+  channel: v24.9
+  installPlanApproval: Automatic
+  name: gpu-operator-certified
+  source: certified-operators
+  sourceNamespace: openshift-marketplace
+EOF
+
+<span class="yc"># Apply ClusterPolicy (see GPU Operator section above for full YAML)</span>
+<span class="sp">$</span> oc apply -f cluster-policy.yaml
+
+<span class="yc"># Verify GPU nodes are discovered</span>
+<span class="sp">$</span> oc get nodes -l nvidia.com/gpu.present=true
+NAME           STATUS   ROLES    AGE   VERSION
+gpu-node-01    Ready    worker   45d   v1.29.9+openshift.1
+gpu-node-02    Ready    worker   45d   v1.29.9+openshift.1
+gpu-node-03    Ready    worker   45d   v1.29.9+openshift.1
+
+<span class="yc"># Confirm GPUs are allocatable</span>
+<span class="sp">$</span> oc describe node gpu-node-01 | grep -A 4 "Allocatable:"
+Allocatable:
+  cpu:                128
+  memory:             1056784Mi
+  nvidia.com/gpu:     8
+  pods:               250</code></pre>
+    </div>
+
+    <h3>Step 3: Create Namespace and Model Storage</h3>
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>shell</span>
+            <span>Set up model storage</span>
+        </div>
+<pre><code><span class="yc"># Create the inference namespace</span>
+<span class="sp">$</span> oc new-project ai-inference
+
+<span class="yc"># Create a PVC for model weights (backed by high-throughput storage)</span>
+<span class="sp">$</span> oc apply -f - &lt;&lt;EOF
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: model-store
+  namespace: ai-inference
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: ocs-storagecluster-cephfs
+  resources:
+    requests:
+      storage: 500Gi
+EOF
+
+<span class="yc"># Download model weights into the PVC using a Job</span>
+<span class="sp">$</span> oc apply -f - &lt;&lt;EOF
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: download-llama-3-70b
+  namespace: ai-inference
+spec:
+  template:
+    spec:
+      containers:
+        - name: downloader
+          image: registry.redhat.io/redhat-ai/model-downloader:latest
+          env:
+            - name: MODEL_ID
+              value: meta-llama/Llama-3.1-70B-Instruct
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-credentials
+                  key: token
+          volumeMounts:
+            - name: model-store
+              mountPath: /models
+              subPath: llama-3-70b
+      volumes:
+        - name: model-store
+          persistentVolumeClaim:
+            claimName: model-store
+      restartPolicy: Never
+EOF
+
+<span class="yc"># Monitor download progress</span>
+<span class="sp">$</span> oc logs -f job/download-llama-3-70b -n ai-inference
+Downloading meta-llama/Llama-3.1-70B-Instruct...
+[========================================] 100%  140.4 GB / 140.4 GB
+Model downloaded successfully to /models/llama-3-70b</code></pre>
+    </div>
+
+    <h3>Step 4: Apply the LLMInferenceService</h3>
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>shell</span>
+            <span>Deploy the inference service</span>
+        </div>
+<pre><code><span class="yc"># Apply the LLMInferenceService (using the disaggregated YAML from earlier)</span>
+<span class="sp">$</span> oc apply -f disaggregated-inference.yaml
+llminferenceservice.serving.llm-d.ai/llama-3-70b-disagg created
+
+<span class="yc"># Watch the controller reconcile</span>
+<span class="sp">$</span> oc get llminferenceservice -n ai-inference -w
+NAME                  READY   REPLICAS   ROUTING   AGE
+llama-3-70b-disagg    False   0/6        EPP       5s
+llama-3-70b-disagg    False   2/6        EPP       45s
+llama-3-70b-disagg    False   4/6        EPP       1m30s
+llama-3-70b-disagg    True    6/6        EPP       3m12s</code></pre>
+    </div>
+
+    <h3>Step 5: Verify Pods Are Running</h3>
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>shell</span>
+            <span>Verify inference pods</span>
+        </div>
+<pre><code><span class="sp">$</span> oc get pods -n ai-inference -l llm-d.ai/service=llama-3-70b-disagg
+NAME                                           READY   STATUS    RESTARTS   AGE
+llama-3-70b-disagg-prefill-0                   1/1     Running   0          4m
+llama-3-70b-disagg-prefill-1                   1/1     Running   0          4m
+llama-3-70b-disagg-decode-0                    1/1     Running   0          4m
+llama-3-70b-disagg-decode-1                    1/1     Running   0          4m
+llama-3-70b-disagg-decode-2                    1/1     Running   0          4m
+llama-3-70b-disagg-decode-3                    1/1     Running   0          4m
+llama-3-70b-disagg-epp-7f8d4b6c9-m2kpq        1/1     Running   0          4m
+
+<span class="yc"># Verify GPU allocation</span>
+<span class="sp">$</span> oc describe pod llama-3-70b-disagg-prefill-0 -n ai-inference | grep -A 2 "Limits:"
+    Limits:
+      nvidia.com/gpu:  4
+      memory:          128Gi</code></pre>
+    </div>
+
+    <h3>Step 6: Test the Endpoint</h3>
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>shell</span>
+            <span>Test with curl (OpenAI-compatible API)</span>
+        </div>
+<pre><code><span class="yc"># Get the Route URL</span>
+<span class="sp">$</span> INFERENCE_URL=$(oc get route llama-3-70b-disagg -n ai-inference -o jsonpath='{.spec.host}')
+
+<span class="yc"># Send a test request</span>
+<span class="sp">$</span> curl -s https://${INFERENCE_URL}/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "meta-llama/Llama-3.1-70B-Instruct",
+    "messages": [
+      {"role": "user", "content": "Explain Kubernetes in one paragraph."}
+    ],
+    "max_tokens": 256,
+    "temperature": 0.7
+  }' | jq '.choices[0].message.content'
+
+"Kubernetes is an open-source container orchestration platform that automates
+the deployment, scaling, and management of containerized applications..."
+
+<span class="yc"># Verify streaming works</span>
+<span class="sp">$</span> curl -N https://${INFERENCE_URL}/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "meta-llama/Llama-3.1-70B-Instruct",
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "max_tokens": 50,
+    "stream": true
+  }'
+data: {"choices":[{"delta":{"content":"Hello"},"index":0}],...}
+data: {"choices":[{"delta":{"content":"!"},"index":0}],...}
+data: {"choices":[{"delta":{"content":" How"},"index":0}],...}
+...</code></pre>
+    </div>
+
+    <h3>Step 7: Check Metrics</h3>
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>shell</span>
+            <span>Verify metrics are flowing</span>
+        </div>
+<pre><code><span class="yc"># Port-forward to a vLLM pod's metrics endpoint</span>
+<span class="sp">$</span> oc port-forward llama-3-70b-disagg-decode-0 -n ai-inference 8080:8080 &
+
+<span class="yc"># Query metrics directly</span>
+<span class="sp">$</span> curl -s localhost:8080/metrics | grep vllm:num_requests
+vllm:num_requests_running{model_name="llama-3-70b"} 3
+vllm:num_requests_waiting{model_name="llama-3-70b"} 0
+
+<span class="sp">$</span> curl -s localhost:8080/metrics | grep gpu_cache_usage
+vllm:gpu_cache_usage_perc{model_name="llama-3-70b"} 0.234
+
+<span class="yc"># Verify ServiceMonitor exists (auto-created by the controller)</span>
+<span class="sp">$</span> oc get servicemonitor -n ai-inference
+NAME                              AGE
+llama-3-70b-disagg-metrics        5m</code></pre>
+    </div>
+
+    <h2>Troubleshooting Guide</h2>
+    <p>
+        Even with operator-managed deployments, things go wrong. This section covers the most common failure modes, their root causes, and the steps to resolve them. These are drawn from real-world production deployments.
+    </p>
+
+    <div class="troubleshoot-card">
+        <h4>Pod Stuck in Pending (GPU Scheduling)</h4>
+        <p class="symptom"><span class="label symptom-label">Symptom</span> Inference pods remain in <code>Pending</code> state indefinitely. <code>oc describe pod</code> shows <code>0/6 nodes are available: 6 Insufficient nvidia.com/gpu.</code></p>
+        <p class="cause"><span class="label cause-label">Cause</span> The cluster does not have enough free GPUs to satisfy the request, or the <code>gpuType</code> / <code>nodeSelector</code> does not match any available nodes. Common when requesting H100-SXM but the cluster only has H100-PCIe.</p>
+        <p class="fix"><span class="label fix-label">Fix</span> Check available GPU capacity: <code>oc describe nodes -l nvidia.com/gpu.present=true | grep -E "nvidia.com/gpu|Allocatable|Allocated"</code>. Verify the <code>gpuType</code> in your CRD matches the <code>nvidia.com/gpu.product</code> labels. Reduce <code>replicas</code> or <code>gpuCount</code> if capacity is insufficient. Check for other workloads consuming GPU resources: <code>oc get pods --all-namespaces -o json | jq '.items[] | select(.spec.containers[].resources.limits."nvidia.com/gpu" != null) | .metadata.name'</code>.</p>
+    </div>
+
+    <div class="troubleshoot-card">
+        <h4>OOM on Model Load (GPU Memory)</h4>
+        <p class="symptom"><span class="label symptom-label">Symptom</span> Pod starts and immediately crashes with <code>torch.cuda.OutOfMemoryError: CUDA out of memory</code> or <code>RuntimeError: NCCL error</code>. CrashLoopBackOff ensues.</p>
+        <p class="cause"><span class="label cause-label">Cause</span> The model weights plus KV-cache allocation exceed available GPU memory. A 70B model in float16 requires approximately 140 GB just for weights. With <code>gpuCount: 2</code> on 80 GB GPUs, you have 160 GB total &mdash; barely enough for weights, leaving no room for KV-cache.</p>
+        <p class="fix"><span class="label fix-label">Fix</span> Increase <code>gpuCount</code> to provide more total GPU memory. Reduce <code>maxModelLen</code> to lower KV-cache allocation. Switch to a quantized model (AWQ/GPTQ) that requires less memory. Use <code>bfloat16</code> instead of <code>float32</code> if the dtype is misconfigured. For a 70B model, use a minimum of <code>gpuCount: 4</code> on 80 GB GPUs.</p>
+    </div>
+
+    <div class="troubleshoot-card">
+        <h4>High TTFT (KV-Cache Saturation)</h4>
+        <p class="symptom"><span class="label symptom-label">Symptom</span> P99 TTFT climbs above SLA threshold (e.g., >500ms). Users report slow initial response time. The <code>HighTimeToFirstToken</code> alert fires.</p>
+        <p class="cause"><span class="label cause-label">Cause</span> KV-cache utilization on one or more replicas is above 90%, causing new requests to queue while waiting for cache blocks to free up. This happens when concurrent request volume exceeds what the current replica count can handle.</p>
+        <p class="fix"><span class="label fix-label">Fix</span> Check KV-cache utilization: <code>curl -s localhost:8080/metrics | grep gpu_cache_usage</code>. If above 0.85 on multiple replicas, increase <code>maxReplicas</code> in the autoscaling config. If autoscaling is not triggering, verify the metric source and <code>targetUtilization</code> threshold. Consider reducing <code>maxModelLen</code> to free KV-cache memory. In disaggregated mode, check if the bottleneck is prefill or decode and scale the appropriate pool.</p>
+    </div>
+
+    <div class="troubleshoot-card">
+        <h4>EPP Routing Errors</h4>
+        <p class="symptom"><span class="label symptom-label">Symptom</span> Requests return <code>503 Service Unavailable</code> or <code>502 Bad Gateway</code>. The EPP pod logs show <code>no healthy backends available</code> or <code>failed to pick endpoint</code>.</p>
+        <p class="cause"><span class="label cause-label">Cause</span> The EPP cannot reach any backend inference pods, or all backends are reporting unhealthy status. This can happen during rolling updates, after a scale-down event, or if inference pods are crashing.</p>
+        <p class="fix"><span class="label fix-label">Fix</span> Check EPP logs: <code>oc logs -l app=llama-3-70b-disagg-epp -n ai-inference</code>. Verify backend pods are healthy: <code>oc get endpoints llama-3-70b-disagg -n ai-inference</code>. If endpoints are empty, the inference pods are not passing health checks. Check pod readiness probes: <code>oc describe pod &lt;pod-name&gt; | grep -A 5 Readiness</code>. Model loading can take several minutes; ensure <code>initialDelaySeconds</code> on readiness probes is long enough (60-120s for large models).</p>
+    </div>
+
+    <div class="troubleshoot-card">
+        <h4>TLS Certificate Issues on Route</h4>
+        <p class="symptom"><span class="label symptom-label">Symptom</span> External HTTPS requests fail with <code>curl: (60) SSL certificate problem: unable to get local issuer certificate</code> or the browser shows a certificate warning.</p>
+        <p class="cause"><span class="label cause-label">Cause</span> The OpenShift Route uses a self-signed certificate from the default ingress controller. This is normal for internal clusters but breaks external client integrations.</p>
+        <p class="fix"><span class="label fix-label">Fix</span> Patch the Route to use a valid certificate: <code>oc create secret tls inference-tls --cert=cert.pem --key=key.pem -n ai-inference</code> and annotate the Route. Alternatively, use the OpenShift cert-manager operator to automate certificate provisioning from Let's Encrypt or your internal CA. For testing, use <code>curl -k</code> to skip verification.</p>
+    </div>
+
+    <div class="troubleshoot-card">
+        <h4>Model Download Failures</h4>
+        <p class="symptom"><span class="label symptom-label">Symptom</span> The model download Job fails with <code>401 Unauthorized</code> from HuggingFace or hangs indefinitely at 0% progress.</p>
+        <p class="cause"><span class="label cause-label">Cause</span> Missing or invalid HuggingFace token for gated models (Llama requires acceptance of Meta's license), or network egress is blocked by NetworkPolicy / firewall rules. In air-gapped environments, the cluster has no internet access at all.</p>
+        <p class="fix"><span class="label fix-label">Fix</span> Verify the HuggingFace token: <code>oc get secret hf-credentials -n ai-inference -o jsonpath='{.data.token}' | base64 -d</code>. Ensure the token has accepted the model's license on huggingface.co. For air-gapped environments, pre-load the model into the PVC from an external workstation and transport the PV data. Check egress NetworkPolicies: <code>oc get networkpolicy -n ai-inference</code>.</p>
+    </div>
+
+    <h2>Enterprise vs. Upstream: A Detailed Comparison</h2>
+    <p>
+        Choosing between upstream llm-d and Red Hat AI is not a binary decision. Most mature organizations use both, selecting the right tool for each stage of their workflow. The following table details the specific differences across every operational dimension:
+    </p>
+
+    <table class="comparison-table">
+        <thead>
+            <tr>
+                <th>Capability</th>
+                <th>Upstream llm-d</th>
+                <th>Red Hat AI</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Release cadence</td>
+                <td>Continuous; nightly builds available</td>
+                <td>Quarterly releases with point releases for critical fixes</td>
+            </tr>
+            <tr>
+                <td>Hardware certification</td>
+                <td>Community-tested; bring your own validation</td>
+                <td>Certified profiles for NVIDIA H100, H200, B200, and AMD MI300X with tested driver versions</td>
+            </tr>
+            <tr>
+                <td>Support</td>
+                <td>Community via GitHub Issues, Slack, mailing lists</td>
+                <td>24/7 enterprise support with SLA (Sev 1: 1-hour response)</td>
+            </tr>
+            <tr>
+                <td>Security</td>
+                <td>Community CVE reporting; patch at your own pace</td>
+                <td>Red Hat Product Security team; CVE patches within 48 hours for critical vulnerabilities; signed container images</td>
+            </tr>
+            <tr>
+                <td>FIPS compliance</td>
+                <td>Not validated</td>
+                <td>FIPS 140-2/140-3 validated cryptographic modules</td>
+            </tr>
+            <tr>
+                <td>Air-gapped deployment</td>
+                <td>Possible with manual image mirroring</td>
+                <td>First-class support with <code>oc-mirror</code> tooling and disconnected install documentation</td>
+            </tr>
+            <tr>
+                <td>Container images</td>
+                <td>Community-built; unsigned</td>
+                <td>Signed with Red Hat's GPG key; built from audited source; scanned for CVEs</td>
+            </tr>
+            <tr>
+                <td>Lifecycle</td>
+                <td>No guaranteed support window; old versions may be abandoned</td>
+                <td>18-month support lifecycle per major release; extended update support available</td>
+            </tr>
+            <tr>
+                <td>GPU driver management</td>
+                <td>Manual driver install or community operator</td>
+                <td>Certified GPU Operator with rolling upgrade support and PodDisruptionBudget awareness</td>
+            </tr>
+            <tr>
+                <td>Monitoring</td>
+                <td>Raw Prometheus metrics; bring your own dashboards</td>
+                <td>Pre-built Grafana dashboards, alert rule templates, OpenShift Console integration</td>
+            </tr>
+            <tr>
+                <td>Multi-tenancy</td>
+                <td>Namespace isolation; manual RBAC</td>
+                <td>Integrated with OpenShift RBAC, audit logging, and network policy templates</td>
+            </tr>
+            <tr>
+                <td>InstructLab integration</td>
+                <td>Separate manual setup</td>
+                <td>Integrated fine-tune-to-deploy pipeline via the Red Hat AI Dashboard</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>
+        The sweet spot for many organizations is to use upstream llm-d in development and staging environments where engineers need access to the latest features and the freedom to experiment with different configurations. When a workload is ready for production &mdash; when it needs to serve real users with contractual SLAs &mdash; it moves to Red Hat AI, where the same CRD-based API ensures that the deployment manifest transfers directly from staging to production with minimal changes.
+    </p>
+    <p>
+        This is not about upstream being inferior. It is about recognizing that production infrastructure has requirements that extend far beyond feature functionality. When an inference endpoint is serving a customer-facing application and something breaks at 3 AM, the difference between "file a GitHub issue" and "call Red Hat support and get an engineer on the phone within an hour" can mean the difference between a minor incident and a P1 outage.
+    </p>
+
+    <h2>Migration Guide: Moving from Standalone vLLM to llm-d on OpenShift</h2>
+    <p>
+        Many organizations start with standalone vLLM &mdash; either running directly on bare metal, inside Docker, or deployed manually as Kubernetes Deployments. Migration to llm-d on OpenShift is straightforward because llm-d uses vLLM as its inference engine. Your model, your prompt templates, and your client integrations remain the same. What changes is how the deployment is managed, how routing works, and how the system scales.
+    </p>
+
+    <h3>What Changes</h3>
+    <ul>
+        <li><strong>Deployment mechanism</strong> &mdash; Instead of managing Deployments, Services, ConfigMaps, and HPA resources manually, you define a single <code>LLMInferenceService</code> CRD. The controller creates all downstream resources.</li>
+        <li><strong>Routing</strong> &mdash; Instead of a generic Kubernetes Service or Ingress with round-robin, requests flow through the EPP, which understands KV-cache state, LoRA affinity, and prefix caching.</li>
+        <li><strong>Autoscaling</strong> &mdash; Instead of HPA on CPU utilization, autoscaling reacts to inference-specific metrics like queue depth and KV-cache utilization.</li>
+        <li><strong>GPU management</strong> &mdash; Instead of manual driver installation, the GPU Operator manages drivers, device plugins, and topology discovery.</li>
+        <li><strong>Monitoring</strong> &mdash; Instead of custom Prometheus configurations, metrics are scraped automatically through operator-created ServiceMonitors.</li>
+    </ul>
+
+    <h3>What Stays the Same</h3>
+    <ul>
+        <li><strong>API compatibility</strong> &mdash; llm-d exposes the same OpenAI-compatible <code>/v1/chat/completions</code> and <code>/v1/completions</code> endpoints. Existing client code works without modification. Any SDK or library that works with the OpenAI API (including the official OpenAI Python and Node.js libraries, LangChain, LlamaIndex) works out of the box &mdash; just change the base URL.</li>
+        <li><strong>Model format</strong> &mdash; Same HuggingFace model weights. No conversion or re-quantization needed.</li>
+        <li><strong>vLLM engine</strong> &mdash; The same vLLM engine powers inference. Sampling parameters, tokenizer behavior, and generation quality are identical.</li>
+        <li><strong>Prompt templates</strong> &mdash; Chat templates, system prompts, and tool definitions work identically.</li>
+    </ul>
+
+    <h3>Config Mapping: vLLM CLI Arguments to CRD Fields</h3>
+    <p>
+        If you are currently launching vLLM with CLI arguments, here is how those map to <code>LLMInferenceService</code> CRD fields:
+    </p>
+
+    <table class="mapping-table">
+        <thead>
+            <tr>
+                <th>vLLM CLI Argument</th>
+                <th>CRD Field</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>--model</td>
+                <td>spec.model.name</td>
+                <td>HuggingFace model ID or path</td>
+            </tr>
+            <tr>
+                <td>--tensor-parallel-size</td>
+                <td>spec.serving.resources.gpuCount</td>
+                <td>GPUs per replica = tensor parallel degree</td>
+            </tr>
+            <tr>
+                <td>--max-model-len</td>
+                <td>spec.model.maxModelLen</td>
+                <td>Maximum context window in tokens</td>
+            </tr>
+            <tr>
+                <td>--dtype</td>
+                <td>spec.model.dtype</td>
+                <td>float16, bfloat16, float32, auto</td>
+            </tr>
+            <tr>
+                <td>--gpu-memory-utilization</td>
+                <td>spec.serving.gpuMemoryUtilization</td>
+                <td>Fraction of GPU memory for KV-cache (default 0.9)</td>
+            </tr>
+            <tr>
+                <td>--enable-lora</td>
+                <td>spec.model.loraAdapters</td>
+                <td>Enabled automatically when adapters are specified</td>
+            </tr>
+            <tr>
+                <td>--max-lora-rank</td>
+                <td>spec.model.loraAdapters[].maxLoraRank</td>
+                <td>Per-adapter rank configuration</td>
+            </tr>
+            <tr>
+                <td>--host / --port</td>
+                <td>(managed by controller)</td>
+                <td>The controller configures networking; use the Route URL</td>
+            </tr>
+            <tr>
+                <td>--served-model-name</td>
+                <td>spec.model.name</td>
+                <td>The model name reported in API responses</td>
+            </tr>
+            <tr>
+                <td>--quantization</td>
+                <td>spec.model.quantization</td>
+                <td>awq, gptq, squeezellm, or none</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Migration Steps</h3>
+    <div class="steps">
+        <div class="step"><strong>Audit your current vLLM launch command.</strong> Extract every CLI argument you are using. Map each one to the corresponding CRD field using the table above.</div>
+        <div class="step"><strong>Transfer model weights to a PVC.</strong> If your models are on local disk, copy them to a PersistentVolumeClaim. If they are in S3, use an <code>s3://</code> URI in the CRD source field.</div>
+        <div class="step"><strong>Write the LLMInferenceService YAML.</strong> Start with the basic template and add fields as needed. Set <code>replicas</code> to match your current pod count.</div>
+        <div class="step"><strong>Deploy and validate.</strong> Apply the CRD and send test requests. Compare response quality and latency against your existing deployment.</div>
+        <div class="step"><strong>Update client base URL.</strong> Point your application from the old vLLM endpoint to the new OpenShift Route URL. No other client code changes are needed.</div>
+        <div class="step"><strong>Enable advanced features.</strong> Once baseline is validated, enable disaggregated serving, KV-cache-aware routing, or multi-LoRA support incrementally.</div>
+        <div class="step"><strong>Decommission standalone vLLM.</strong> After confirming production stability for a burn-in period, shut down the old deployment.</div>
+    </div>
+
+    <div class="info-box">
+        <div class="info-label">Migration Tip</div>
+        <p>Run both deployments in parallel during migration. Point a percentage of traffic (10-20%) to the new llm-d endpoint using a weighted Route or external load balancer. Monitor latency and error rates for a minimum burn-in period of 48 hours before cutting over fully. This lets you validate at production scale without risking a full outage.</p>
+    </div>
+
+    <h3>Example: Before and After</h3>
+    <p>
+        <strong>Before</strong> &mdash; launching vLLM directly:
+    </p>
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>shell</span>
+            <span>Standalone vLLM launch command</span>
+        </div>
+<pre><code><span class="sp">$</span> python -m vllm.entrypoints.openai.api_server \
+    --model meta-llama/Llama-3.1-70B-Instruct \
+    --tensor-parallel-size 4 \
+    --max-model-len 32768 \
+    --dtype bfloat16 \
+    --gpu-memory-utilization 0.9 \
+    --host 0.0.0.0 \
+    --port 8000</code></pre>
+    </div>
+
+    <p>
+        <strong>After</strong> &mdash; the equivalent as an LLMInferenceService CRD, plus intelligent routing, autoscaling, monitoring, and GPU lifecycle management:
+    </p>
+    <div class="code-block">
+        <div class="code-block-header">
+            <span>yaml</span>
+            <span>Equivalent LLMInferenceService</span>
         </div>
 <pre><code><span class="yk">apiVersion:</span> <span class="ys">serving.llm-d.ai/v1alpha1</span>
 <span class="yk">kind:</span> <span class="ys">LLMInferenceService</span>
@@ -770,196 +1780,49 @@
   <span class="yk">namespace:</span> <span class="ys">ai-inference</span>
 <span class="yk">spec:</span>
   <span class="yk">model:</span>
-    <span class="yk">name:</span> <span class="ys">meta-llama/Llama-3-70B-Instruct</span>
+    <span class="yk">name:</span> <span class="ys">meta-llama/Llama-3.1-70B-Instruct</span>
     <span class="yk">source:</span>
       <span class="yk">uri:</span> <span class="ys">pvc://model-store/llama-3-70b</span>
+    <span class="yk">maxModelLen:</span> <span class="yn">32768</span>
+    <span class="yk">dtype:</span> <span class="ys">bfloat16</span>
   <span class="yk">serving:</span>
     <span class="yk">runtime:</span> <span class="ys">vllm</span>
-    <span class="yk">replicas:</span> <span class="yn">4</span>
+    <span class="yk">replicas:</span> <span class="yn">1</span>
+    <span class="yk">gpuMemoryUtilization:</span> <span class="yn">0.9</span>
     <span class="yk">resources:</span>
       <span class="yk">gpu:</span> <span class="ys">nvidia.com/gpu</span>
       <span class="yk">gpuCount:</span> <span class="yn">4</span>
-      <span class="yk">gpuType:</span> <span class="ys">H100-SXM</span>
-    <span class="yk">disaggregated:</span>
-      <span class="yk">enabled:</span> <span class="yb">true</span>
-      <span class="yk">prefillReplicas:</span> <span class="yn">2</span>
-      <span class="yk">decodeReplicas:</span> <span class="yn">2</span>
   <span class="yk">routing:</span>
     <span class="yk">endpoint:</span> <span class="ys">EPP</span>
     <span class="yk">strategy:</span> <span class="ys">kv-cache-aware</span>
   <span class="yk">autoscaling:</span>
-    <span class="yk">minReplicas:</span> <span class="yn">2</span>
+    <span class="yk">minReplicas:</span> <span class="yn">1</span>
     <span class="yk">maxReplicas:</span> <span class="yn">8</span>
     <span class="yk">targetUtilization:</span> <span class="yn">70</span></code></pre>
     </div>
 
     <p>
-        This YAML tells the system everything it needs to know: pull the Llama 3 70B model from a persistent volume, run it on vLLM across four replicas with H100 GPUs, split those replicas into a disaggregated prefill/decode topology, route requests through the Endpoint Picker (EPP) with KV-cache-aware scheduling, and autoscale between two and eight replicas based on utilization. The operator handles the rest &mdash; creating pods, services, configuring networking, and wiring up the routing layer.
-    </p>
-
-    <h3>GPU Operator and Node Feature Discovery</h3>
-    <p>
-        Distributed LLM inference is fundamentally a GPU orchestration problem, and getting GPU placement right is non-negotiable. The OpenShift <strong>GPU Operator</strong> manages NVIDIA GPU drivers and the container runtime hooks needed for GPU passthrough into containers. It ensures the correct driver version is installed, CUDA libraries are available, and device plugins are registered with the kubelet.
-    </p>
-    <p>
-        <strong>Node Feature Discovery (NFD)</strong> works alongside the GPU Operator to detect and label the GPU topology of every node in the cluster. It identifies GPU models, memory capacity, NVLink connectivity between GPUs, PCIe topology, and NUMA node affinity. These labels become the building blocks for intelligent scheduling decisions.
-    </p>
-    <p>
-        Together, GPU Operator and NFD ensure that when an <code>LLMInferenceService</code> requests four H100 GPUs with tensor parallelism, the scheduler places the pod on a node where those four GPUs are connected via NVLink for maximum inter-GPU bandwidth. This is critical for disaggregated serving, where prefill and decode workloads have very different GPU communication patterns and placing them on the wrong topology can destroy performance.
-    </p>
-
-    <h3>Monitoring Integration</h3>
-    <p>
-        LLM inference generates a unique set of operational signals that generic application monitoring simply does not capture. OpenShift's built-in Prometheus instance scrapes llm-d metrics natively, providing visibility into the metrics that matter:
-    </p>
-    <ul>
-        <li><strong>Time-to-first-token (TTFT)</strong> &mdash; The latency a user experiences before the first token appears. This is the primary responsiveness metric.</li>
-        <li><strong>Inter-token latency (ITL)</strong> &mdash; The time between successive tokens during generation. Spikes here cause visible "stuttering" in streaming responses.</li>
-        <li><strong>Queue depth</strong> &mdash; The number of requests waiting for a free inference slot. This is the leading indicator for when scaling is needed.</li>
-        <li><strong>KV-cache utilization</strong> &mdash; How much of the available KV-cache memory is consumed. When this saturates, new requests must wait or be routed elsewhere.</li>
-        <li><strong>GPU utilization and memory</strong> &mdash; Standard GPU metrics that, when correlated with inference metrics, reveal whether the system is compute-bound or memory-bound.</li>
-    </ul>
-    <p>
-        Grafana dashboards purpose-built for inference observability ship with Red Hat AI, providing a single pane of glass for the entire inference stack. Alert rules can be configured for SLA violations &mdash; for example, triggering a page when p99 TTFT exceeds 500ms or when KV-cache utilization on any replica exceeds 90%.
-    </p>
-
-    <h2>Walking Through a Deployment</h2>
-    <p>
-        Let's trace through what it actually looks like to go from an empty OpenShift cluster to a production inference endpoint. These are the concrete steps an operator takes:
-    </p>
-
-    <div class="steps">
-        <div class="step"><strong>Install the Red Hat AI Operator</strong> from OperatorHub. This deploys the controllers that understand the LLMInferenceService CRD and manage the inference lifecycle.</div>
-        <div class="step"><strong>Configure GPU Operator and NFD.</strong> The GPU Operator installs NVIDIA drivers on GPU nodes. NFD labels those nodes with GPU topology information. Both are available as OpenShift operators.</div>
-        <div class="step"><strong>Create a model storage PVC and download the model.</strong> The model weights are stored on a PersistentVolumeClaim backed by high-throughput storage (ideally NVMe-backed). Model download can be handled by a pre-pull job or by referencing a container registry.</div>
-        <div class="step"><strong>Apply the LLMInferenceService CRD.</strong> Submit the YAML resource shown earlier. The operator validates the configuration against available cluster resources.</div>
-        <div class="step"><strong>The operator creates the full stack:</strong> vLLM inference pods (split into prefill and decode if disaggregated), the EPP routing deployment, a Kubernetes Service for internal traffic, and an OpenShift Route for external access.</div>
-        <div class="step"><strong>Test with curl to the OpenShift Route.</strong> The endpoint exposes an OpenAI-compatible API, so any existing client library or tool that speaks the OpenAI chat completions protocol works out of the box.</div>
-        <div class="step"><strong>Monitor via OpenShift Console dashboards.</strong> The built-in dashboards show inference metrics alongside cluster health, providing operational visibility from day one.</div>
-    </div>
-
-    <p>
-        What is notable about this workflow is what the operator <em>does not</em> have to do: there is no manual GPU driver installation, no hand-written Kubernetes networking configuration, no custom Prometheus scrape configs, and no bespoke load balancer setup. The operator and CRD abstract away the complexity that would otherwise consume weeks of engineering time.
-    </p>
-
-    <h2>Release Progression</h2>
-    <p>
-        Red Hat AI has evolved rapidly alongside the llm-d upstream project. Tracking the release progression reveals how quickly the inference capabilities have matured.
-    </p>
-
-    <div class="release-timeline">
-        <div class="release-item">
-            <h4>Red Hat AI 3</h4>
-            <div class="release-date">2024</div>
-            <ul>
-                <li>Initial integration of vLLM-based model serving</li>
-                <li>Basic single-model deployment on OpenShift</li>
-                <li>GPU auto-detection and driver management</li>
-                <li>OpenShift 4.14+ support</li>
-            </ul>
-        </div>
-        <div class="release-item">
-            <h4>Red Hat AI 3.3</h4>
-            <div class="release-date">Early 2025</div>
-            <ul>
-                <li>Introduction of the LLMInferenceService CRD</li>
-                <li>Disaggregated prefill/decode support</li>
-                <li>Multi-model serving on shared GPU pools</li>
-                <li>NVIDIA H100 and H200 certification</li>
-                <li>Enhanced inference monitoring dashboards</li>
-            </ul>
-        </div>
-        <div class="release-item">
-            <h4>Red Hat AI 3.4</h4>
-            <div class="release-date">Mid 2025</div>
-            <ul>
-                <li>Advanced EPP routing: KV-cache-aware, LoRA-aware, prefix-cache-aware</li>
-                <li>HPA-based autoscaling for inference pods</li>
-                <li>NVIDIA B200 support</li>
-                <li>AMD MI300X support (tech preview)</li>
-                <li>Multi-cluster inference federation (tech preview)</li>
-                <li>Integration with InstructLab for fine-tune-to-deploy pipeline</li>
-            </ul>
-        </div>
-    </div>
-
-    <p>
-        The acceleration between releases is significant. What began as basic model serving in 2024 has evolved into a fully disaggregated, multi-strategy routing platform with support for the latest GPU architectures from both NVIDIA and AMD. Each release tracks upstream llm-d features that have been stabilized and certified for enterprise use.
-    </p>
-
-    <h2>Enterprise vs. Upstream: Different Tools for Different Stages</h2>
-    <p>
-        A common misconception is that choosing between upstream and enterprise is a binary decision. In practice, the most effective organizations use both, choosing the right tool for each stage of their workflow.
-    </p>
-
-    <div class="comparison-grid">
-        <div class="comparison-card upstream">
-            <h4>Upstream llm-d</h4>
-            <ul>
-                <li>Latest features, often weeks ahead of enterprise</li>
-                <li>Community-driven support via GitHub and Slack</li>
-                <li>Bring your own Kubernetes cluster</li>
-                <li>Manual GPU driver and topology setup</li>
-                <li>DIY monitoring and alerting</li>
-                <li>Ideal for development and experimentation</li>
-                <li>Rapid iteration on routing strategies</li>
-                <li>Full flexibility to customize and extend</li>
-            </ul>
-        </div>
-        <div class="comparison-card enterprise">
-            <h4>Red Hat AI</h4>
-            <ul>
-                <li>Certified hardware profiles tested by Red Hat QE</li>
-                <li>24/7 enterprise support with SLA guarantees</li>
-                <li>Automatic GPU driver management</li>
-                <li>Integrated monitoring, logging, and alerting</li>
-                <li>Security patches and CVE response</li>
-                <li>FIPS compliance for regulated industries</li>
-                <li>Air-gapped deployment for disconnected environments</li>
-                <li>Certified and signed container images</li>
-            </ul>
-        </div>
-    </div>
-
-    <p>
-        The sweet spot for many organizations is to use upstream llm-d in development and staging environments where engineers need access to the latest features and the freedom to experiment with different configurations. When a workload is ready for production &mdash; when it needs to serve real users with contractual SLAs &mdash; it moves to Red Hat AI, where the same CRD-based API ensures that the deployment manifest transfers directly from staging to production with minimal changes.
-    </p>
-    <p>
-        This is not about upstream being inferior. It is about recognizing that production infrastructure has requirements that extend far beyond feature functionality. When an inference endpoint is serving a customer-facing application at 3 AM and something breaks, the difference between "file a GitHub issue and wait" and "call Red Hat support and get an engineer on the phone" can mean the difference between a minor incident and a major outage.
-    </p>
-
-    <h2>Why This Architecture Matters Now</h2>
-    <p>
-        LLM inference is transitioning from an experimental capability to critical infrastructure. Organizations are embedding LLM-powered features into their core products &mdash; customer support agents, code generation tools, document analysis pipelines, and real-time decision systems. When these features go down, revenue stops.
-    </p>
-    <p>
-        The infrastructure patterns that served the early days of LLM adoption &mdash; single-GPU deployments behind a basic load balancer &mdash; cannot meet these demands. The request patterns are unique: long-running streaming connections, variable-length outputs, memory-intensive KV-cache state, and bursty traffic patterns that make traditional autoscaling heuristics unreliable.
-    </p>
-    <p>
-        llm-d was built specifically for these challenges. Its EPP (Endpoint Picker) routing layer understands inference semantics: it knows which replicas have warm KV-cache entries, which are running prefill versus decode, which have available GPU memory, and which are about to complete long-running requests. This is not generic HTTP load balancing &mdash; it is inference-aware traffic management.
-    </p>
-    <p>
-        Red Hat AI takes these capabilities and wraps them in the operational framework that enterprise teams need: a single operator that manages the full stack, monitoring that speaks the language of inference metrics, GPU management that handles driver lifecycle without manual intervention, and a support organization that understands the entire stack from GPU silicon to API response.
-    </p>
-    <p>
-        For organizations evaluating their inference infrastructure strategy, the llm-d-to-Red-Hat-AI pipeline offers a compelling path. Start with upstream for speed and experimentation. Graduate to enterprise for stability and support. Contribute improvements back to the community. This is the same model that made Linux the foundation of the internet and Kubernetes the foundation of cloud computing. It is now making llm-d the foundation of enterprise LLM inference.
+        The CRD captures everything from the CLI command, and adds routing intelligence, autoscaling, and integration with the OpenShift monitoring and GPU management stack. The total lines of configuration are roughly the same, but the operational burden shifts from you to the controller.
     </p>
 
     <h2>Conclusion</h2>
     <p>
-        The relationship between llm-d and Red Hat AI represents the best of open source operating at its full potential. Innovation happens in the community, where researchers, engineers, and operators collaborate on the hardest problems in distributed inference. Enterprise hardening happens at Red Hat, where that innovation is tested, certified, and backed by the support that production workloads demand.
+        The relationship between llm-d and Red Hat AI represents the open-source-to-enterprise pipeline operating at its best. Innovation happens in the CNCF community, where researchers, engineers, and operators collaborate on the hardest problems in distributed inference: KV-cache-aware routing, disaggregated prefill/decode scheduling, LoRA-affinity placement, and prefix-cache optimization. Enterprise hardening happens at Red Hat, where that innovation is tested against specific hardware, certified for compliance requirements, and backed by 24/7 support.
     </p>
     <p>
-        As LLM inference becomes critical infrastructure &mdash; as fundamental to the enterprise as databases and message queues &mdash; this model ensures that organizations can move fast without sacrificing reliability. They can adopt cutting-edge routing strategies without taking on the operational risk of running unsupported software. They can run on the latest GPU hardware knowing that someone has tested the full stack before it reaches their cluster.
+        What makes this pipeline particularly powerful for LLM inference is that the CRD-based API is shared. The same <code>LLMInferenceService</code> YAML that works on upstream Kubernetes works on OpenShift. The same monitoring queries that surface TTFT and KV-cache utilization in a dev cluster work in a production cluster. The same troubleshooting playbook applies whether you are running community images or Red Hat-signed images. The abstraction boundary is clean and the migration path is concrete.
     </p>
     <p>
-        The enterprise path to distributed LLM inference is not about choosing between open source and commercial software. It is about using both, at the right stage, with the right expectations. llm-d and Red Hat AI make that path concrete.
+        As LLM inference becomes critical infrastructure &mdash; as fundamental to the enterprise as databases, message queues, and service meshes &mdash; the infrastructure patterns described in this article will become the standard. Declarative CRDs for model deployment. GPU-topology-aware scheduling. Inference-specific autoscaling. Monitoring that speaks the language of tokens, not HTTP response codes. Disaggregated serving topologies that independently optimize prefill and decode. These are not experimental features; they are the operational requirements of production LLM workloads.
+    </p>
+    <p>
+        The enterprise path to distributed LLM inference is not about choosing between open source and commercial software. It is about using both, at the right stage, with the right expectations. Start with llm-d upstream for speed, experimentation, and access to cutting-edge features. Graduate to Red Hat AI when your workload needs contractual SLAs, hardware certification, FIPS compliance, and the confidence that someone has tested the entire stack before it reaches your cluster. Contribute improvements back to the community. This is the same model that made Linux the foundation of the internet, Kubernetes the foundation of cloud computing, and is now making llm-d the foundation of enterprise LLM inference.
     </p>
 
     <!-- Call to Action -->
     <div class="cta-box">
         <h3>Explore the Full Architecture</h3>
-        <p>See how llm-d, vLLM, EPP, and the full inference stack fit together in our interactive architecture explorer.</p>
+        <p>See how llm-d, vLLM, EPP, and the full inference stack fit together in our interactive architecture explorer. Walk through request flows, explore disaggregated serving topologies, and understand every component.</p>
         <a href="../" class="cta-button">Launch Interactive App</a>
     </div>
 
