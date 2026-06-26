@@ -1667,14 +1667,657 @@ a:hover { color: #3399ff; }
 }
 
 /* =====================================================
+   Enterprise Readiness Matrix
+   ===================================================== */
+.erm-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+}
+
+.erm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.erm-table th {
+  background: rgba(238, 0, 0, 0.06);
+  padding: 14px 16px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--text-primary);
+  border-bottom: 2px solid var(--border-card);
+  white-space: nowrap;
+}
+
+.erm-table th:first-child {
+  text-align: left;
+  min-width: 180px;
+}
+
+.erm-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-card);
+  color: var(--text-secondary);
+  text-align: center;
+  vertical-align: top;
+}
+
+.erm-table td:first-child {
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.erm-table tr {
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.erm-table tbody tr:hover {
+  background: rgba(255,255,255,0.02);
+}
+
+.erm-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.erm-rating.strong {
+  background: var(--green-dim);
+  color: var(--green);
+}
+
+.erm-rating.moderate {
+  background: var(--amber-dim);
+  color: var(--amber);
+}
+
+.erm-rating.limited {
+  background: var(--red-dim);
+  color: var(--red);
+}
+
+.erm-expand-row td {
+  padding: 0;
+  border-bottom: 1px solid var(--border-card);
+}
+
+.erm-expand-content {
+  display: none;
+  padding: 16px 20px;
+  background: var(--bg-code);
+}
+
+.erm-expand-content.open {
+  display: block;
+}
+
+.erm-expand-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+.erm-expand-col h5 {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.erm-expand-col p {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* =====================================================
+   TCO Calculator
+   ===================================================== */
+.tco-layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+}
+
+.tco-inputs {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.tco-output {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+
+.tco-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.tco-column {
+  background: var(--bg-code);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+}
+
+.tco-column h4 {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.tco-column .tco-col-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.tco-year-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(30, 41, 59, 0.3);
+  font-size: 0.82rem;
+}
+
+.tco-year-label {
+  color: var(--text-secondary);
+}
+
+.tco-year-value {
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.tco-total-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0 0;
+  border-top: 2px solid var(--rh-red);
+  margin-top: 8px;
+  font-size: 1rem;
+}
+
+.tco-total-label {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.tco-total-value {
+  font-family: var(--mono);
+  font-weight: 900;
+  color: var(--rh-red);
+  font-size: 1.1rem;
+}
+
+.tco-savings-box {
+  background: rgba(34, 197, 94, 0.06);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.tco-savings-box h4 {
+  color: var(--green);
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+}
+
+.tco-savings-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 0.85rem;
+}
+
+.tco-savings-item .label {
+  color: var(--text-secondary);
+}
+
+.tco-savings-item .value {
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--green);
+}
+
+.tco-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tco-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.tco-checkbox-item input[type="checkbox"] {
+  accent-color: var(--rh-red);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* =====================================================
+   Stack Explorer
+   ===================================================== */
+.se-stack {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 3px;
+}
+
+.se-layer {
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+  overflow: hidden;
+  border: 1px solid var(--border-card);
+}
+
+.se-layer:hover {
+  border-color: rgba(238, 0, 0, 0.3);
+  transform: translateX(4px);
+}
+
+.se-layer.se-selected {
+  border-color: var(--rh-red);
+  box-shadow: 0 0 20px var(--rh-red-dim);
+  transform: translateX(8px);
+}
+
+.se-layer-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+}
+
+.se-layer-num {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  width: 28px;
+  text-align: center;
+}
+
+.se-layer-name {
+  font-family: 'Red Hat Display', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.se-layer-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.se-layer-chevron {
+  color: var(--text-muted);
+  transition: transform var(--transition);
+  font-size: 0.8rem;
+}
+
+.se-layer.se-selected .se-layer-chevron {
+  transform: rotate(180deg);
+}
+
+.se-layer-detail {
+  display: none;
+  padding: 0 20px 20px;
+  border-top: 1px solid var(--border-card);
+}
+
+.se-layer.se-selected .se-layer-detail {
+  display: block;
+}
+
+.se-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.se-detail-section h5 {
+  font-size: 0.78rem;
+  color: var(--rh-red);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.se-detail-section ul {
+  list-style: none;
+}
+
+.se-detail-section li {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(30, 41, 59, 0.2);
+}
+
+.se-detail-section li:last-child {
+  border-bottom: none;
+}
+
+.se-connection-info {
+  display: flex;
+  gap: 24px;
+  margin-top: 12px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: var(--mono);
+}
+
+/* =====================================================
+   CRD Deployment Flow
+   ===================================================== */
+.crd-flow-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.crd-timeline {
+  position: relative;
+  padding-left: 40px;
+}
+
+.crd-timeline::before {
+  content: '';
+  position: absolute;
+  left: 15px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border-card);
+}
+
+.crd-step {
+  position: relative;
+  margin-bottom: 8px;
+  transition: all var(--transition);
+}
+
+.crd-step-dot {
+  position: absolute;
+  left: -33px;
+  top: 16px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--border-card);
+  border: 2px solid var(--bg-body);
+  z-index: 2;
+  transition: all 0.4s ease;
+}
+
+.crd-step.crd-active .crd-step-dot {
+  background: var(--rh-red);
+  box-shadow: 0 0 12px var(--rh-red-glow);
+}
+
+.crd-step.crd-completed .crd-step-dot {
+  background: var(--green);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+}
+
+.crd-step-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.crd-step.crd-active .crd-step-header {
+  border-color: var(--rh-red);
+  background: var(--rh-red-dim);
+}
+
+.crd-step.crd-completed .crd-step-header {
+  border-color: rgba(34, 197, 94, 0.3);
+  background: rgba(34, 197, 94, 0.04);
+}
+
+.crd-step-num {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  width: 20px;
+}
+
+.crd-step-title {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.crd-step-time {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.crd-step-body {
+  display: none;
+  padding: 12px 16px 16px;
+  margin-top: -1px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-top: none;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.crd-step.crd-active .crd-step-body,
+.crd-step.crd-completed .crd-step-body {
+  display: block;
+}
+
+.crd-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--border-card);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.crd-progress-fill {
+  height: 100%;
+  background: var(--rh-red);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 8px var(--rh-red-glow);
+}
+
+/* =====================================================
+   Certification Tracker
+   ===================================================== */
+.cert-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.cert-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.cert-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: all var(--transition);
+  cursor: pointer;
+}
+
+.cert-card:hover {
+  border-color: rgba(238, 0, 0, 0.3);
+  background: var(--bg-card-hover);
+}
+
+.cert-card.cert-expanded {
+  border-color: var(--rh-red);
+}
+
+.cert-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+}
+
+.cert-card-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.cert-status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.cert-status-badge.available {
+  background: var(--green-dim);
+  color: var(--green);
+}
+
+.cert-status-badge.in-progress {
+  background: var(--amber-dim);
+  color: var(--amber);
+}
+
+.cert-status-badge.planned {
+  background: var(--blue-dim);
+  color: var(--blue);
+}
+
+.cert-status-badge.na {
+  background: rgba(255,255,255,0.04);
+  color: var(--text-muted);
+}
+
+.cert-card-meta {
+  display: flex;
+  gap: 16px;
+  padding: 0 20px 12px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.cert-card-detail {
+  display: none;
+  padding: 0 20px 20px;
+  border-top: 1px solid var(--border-card);
+}
+
+.cert-card.cert-expanded .cert-card-detail {
+  display: block;
+}
+
+.cert-card-detail ul {
+  list-style: none;
+  margin-top: 12px;
+}
+
+.cert-card-detail li {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(30, 41, 59, 0.2);
+}
+
+.cert-card-detail li:last-child {
+  border-bottom: none;
+}
+
+.cert-doc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 0.78rem;
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.cert-card-chevron {
+  color: var(--text-muted);
+  transition: transform var(--transition);
+  font-size: 0.8rem;
+}
+
+.cert-card.cert-expanded .cert-card-chevron {
+  transform: rotate(180deg);
+}
+
+/* =====================================================
    Responsive
    ===================================================== */
 @media (max-width: 1024px) {
   .editor-layout,
-  .cost-layout {
+  .cost-layout,
+  .tco-layout {
     grid-template-columns: 1fr;
   }
   .numa-container {
+    grid-template-columns: 1fr;
+  }
+  .tco-columns {
+    grid-template-columns: 1fr;
+  }
+  .erm-expand-grid {
+    grid-template-columns: 1fr;
+  }
+  .se-detail-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -1691,6 +2334,8 @@ a:hover { color: #3399ff; }
   .flow-path { padding: 10px 0; }
   .topo-detail-cards { grid-template-columns: 1fr; }
   .cost-bar-label { width: 80px; font-size: 0.7rem; }
+  .cert-grid { grid-template-columns: 1fr; }
+  .tco-columns { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 480px) {
@@ -1743,6 +2388,11 @@ a:hover { color: #3399ff; }
   <div class="nav-tab" data-section="gpu-topology">GPU Topology</div>
   <div class="nav-tab" data-section="cost">Cost Estimator</div>
   <div class="nav-tab" data-section="decision">Decision Framework</div>
+  <div class="nav-tab" data-section="readiness-matrix">Readiness Matrix</div>
+  <div class="nav-tab" data-section="tco-calculator">TCO Calculator</div>
+  <div class="nav-tab" data-section="stack-explorer">Stack Explorer</div>
+  <div class="nav-tab" data-section="crd-flow">CRD Flow</div>
+  <div class="nav-tab" data-section="certifications">Certifications</div>
 </nav>
 
 <!-- =====================================================
@@ -1961,6 +2611,70 @@ a:hover { color: #3399ff; }
     </div>
     <div class="decision-questions" id="decisionQuestions"></div>
     <div class="decision-result" id="decisionResult"></div>
+  </div>
+
+  <!-- ===================================================
+       SECTION 11: ENTERPRISE READINESS MATRIX
+       =================================================== -->
+  <div class="section" id="readiness-matrix">
+    <div class="section-header">
+      <div class="section-label">Section 11</div>
+      <h2 class="section-title">Enterprise Readiness Matrix</h2>
+      <p class="section-subtitle">Compare platform options across critical enterprise dimensions. Click any row to expand the detailed comparison.</p>
+    </div>
+    <div id="readinessMatrixContainer"></div>
+  </div>
+
+  <!-- ===================================================
+       SECTION 12: TCO CALCULATOR
+       =================================================== -->
+  <div class="section" id="tco-calculator">
+    <div class="section-header">
+      <div class="section-label">Section 12</div>
+      <h2 class="section-title">3-Year TCO Calculator</h2>
+      <p class="section-subtitle">Compare total cost of ownership across self-managed DIY, OpenShift AI + llm-d, and cloud LLM APIs over a 3-year horizon.</p>
+    </div>
+    <div id="tcoCalculatorContainer"></div>
+    <div class="testimonial">
+      <p>"The 3-year TCO analysis showed OpenShift AI saved us 2.5 FTEs in operations staff compared to managing raw Kubernetes ourselves."</p>
+      <div class="attribution">-- CTO, Series C AI Startup</div>
+    </div>
+  </div>
+
+  <!-- ===================================================
+       SECTION 13: ARCHITECTURE EXPLORER
+       =================================================== -->
+  <div class="section" id="stack-explorer">
+    <div class="section-header">
+      <div class="section-label">Section 13</div>
+      <h2 class="section-title">Full Stack Explorer</h2>
+      <p class="section-subtitle">Click any layer in the OpenShift AI inference stack to explore components, configuration, and integration points.</p>
+    </div>
+    <div id="stackExplorerContainer"></div>
+  </div>
+
+  <!-- ===================================================
+       SECTION 14: DEPLOYMENT FLOW ANIMATION
+       =================================================== -->
+  <div class="section" id="crd-flow">
+    <div class="section-header">
+      <div class="section-label">Section 14</div>
+      <h2 class="section-title">CRD Deployment Flow</h2>
+      <p class="section-subtitle">Watch what happens when you apply an LLMInferenceService CRD, from kubectl apply to live traffic.</p>
+    </div>
+    <div id="crdFlowContainer"></div>
+  </div>
+
+  <!-- ===================================================
+       SECTION 15: CERTIFICATION TRACKER
+       =================================================== -->
+  <div class="section" id="certifications">
+    <div class="section-header">
+      <div class="section-label">Section 15</div>
+      <h2 class="section-title">Compliance Certification Tracker</h2>
+      <p class="section-subtitle">Track which compliance certifications are available at each Red Hat support tier.</p>
+    </div>
+    <div id="certTrackerContainer"></div>
   </div>
 
 </main>
@@ -3433,6 +4147,712 @@ function renderDecisionResult() {
 
 
 /* =====================================================
+   DATA: Enterprise Readiness Matrix
+   ===================================================== */
+const readinessData = [
+  {
+    dimension: 'Security & Hardening',
+    openshift: { rating: 'Strong', text: 'FIPS 140-3, SELinux enforcing, signed images, SCC policies, runtime scanning' },
+    rawK8s: { rating: 'Limited', text: 'Manual SELinux configuration, no built-in image signing, DIY runtime security' },
+    cloud: { rating: 'Moderate', text: 'Provider-managed security, limited visibility into runtime, shared responsibility model' }
+  },
+  {
+    dimension: 'Compliance Certifications',
+    openshift: { rating: 'Strong', text: 'SOC 2, HIPAA, FedRAMP, PCI-DSS, ISO 27001 with Red Hat support for audit evidence' },
+    rawK8s: { rating: 'Limited', text: 'No pre-built compliance artifacts, customer must self-certify entire stack' },
+    cloud: { rating: 'Moderate', text: 'Provider certifications may not cover ML workloads specifically' }
+  },
+  {
+    dimension: 'Vendor Support',
+    openshift: { rating: 'Strong', text: '24/7 Sev-1 support with 1-hour response, TAM available, escalation paths to engineering' },
+    rawK8s: { rating: 'Limited', text: 'Community forums only, no guaranteed response time, self-troubleshooting' },
+    cloud: { rating: 'Moderate', text: 'Provider support for infrastructure, but limited expertise on model serving optimization' }
+  },
+  {
+    dimension: 'Scalability',
+    openshift: { rating: 'Strong', text: 'EPP-managed autoscaling, multi-cluster federation via ACM, proven at 1000+ GPU nodes' },
+    rawK8s: { rating: 'Moderate', text: 'HPA/VPA available but requires custom metrics, manual multi-cluster setup' },
+    cloud: { rating: 'Strong', text: 'Auto-scaling built in, but cost scales linearly and can be unpredictable' }
+  },
+  {
+    dimension: 'GPU Management',
+    openshift: { rating: 'Strong', text: 'NVIDIA GPU Operator, MIG support, NUMA-aware scheduling, certified drivers, topology awareness' },
+    rawK8s: { rating: 'Moderate', text: 'Device plugins available, manual driver management, no topology awareness out of box' },
+    cloud: { rating: 'Moderate', text: 'Abstracted GPU management, limited control over placement and topology' }
+  },
+  {
+    dimension: 'Monitoring & Observability',
+    openshift: { rating: 'Strong', text: 'Built-in Prometheus, Grafana dashboards, vLLM metrics integration, alerting rules included' },
+    rawK8s: { rating: 'Limited', text: 'Manual Prometheus setup, custom dashboards required, no LLM-specific metrics' },
+    cloud: { rating: 'Moderate', text: 'Provider monitoring tools, limited inference-specific metrics visibility' }
+  },
+  {
+    dimension: 'Day-2 Operations',
+    openshift: { rating: 'Strong', text: 'OLM-managed upgrades, PDB integration, canary rollouts, GitOps ready with ArgoCD' },
+    rawK8s: { rating: 'Limited', text: 'Manual upgrade coordination, risk of downtime, custom rollout scripts needed' },
+    cloud: { rating: 'Strong', text: 'Provider handles infrastructure updates, but model versioning is customer-managed' }
+  },
+  {
+    dimension: 'Total Cost at Scale',
+    openshift: { rating: 'Strong', text: 'Subscription cost offset by reduced SRE headcount (2.5 FTE savings) and fewer incidents' },
+    rawK8s: { rating: 'Moderate', text: 'No license cost but 3-5x higher operational overhead, more unplanned downtime' },
+    cloud: { rating: 'Limited', text: 'Per-token pricing becomes very expensive at scale, 10-50x more at high throughput' }
+  },
+  {
+    dimension: 'Multi-tenancy',
+    openshift: { rating: 'Strong', text: 'Namespace isolation, NetworkPolicy, RBAC, resource quotas, priority classes for inference' },
+    rawK8s: { rating: 'Moderate', text: 'Basic namespace isolation, requires manual NetworkPolicy and quota configuration' },
+    cloud: { rating: 'Limited', text: 'Typically single-tenant per deployment, multi-tenant requires separate endpoints' }
+  },
+  {
+    dimension: 'Air-Gap Support',
+    openshift: { rating: 'Strong', text: 'Fully disconnected installation, offline mirror registry, signed content delivery' },
+    rawK8s: { rating: 'Moderate', text: 'Possible but requires significant custom tooling for registry mirroring' },
+    cloud: { rating: 'Limited', text: 'Not applicable for cloud-managed services, requires internet connectivity' }
+  }
+];
+
+/* =====================================================
+   RENDER: Enterprise Readiness Matrix
+   ===================================================== */
+let expandedErmRow = null;
+
+function renderReadinessMatrix() {
+  const el = document.getElementById('readinessMatrixContainer');
+  let html = '<div class="erm-table-wrap"><table class="erm-table">';
+  html += '<thead><tr>';
+  html += '<th>Dimension</th>';
+  html += '<th>OpenShift AI + llm-d</th>';
+  html += '<th>Raw K8s + vLLM</th>';
+  html += '<th>Cloud Managed (SageMaker/Vertex)</th>';
+  html += '</tr></thead><tbody>';
+
+  readinessData.forEach((row, i) => {
+    html += `<tr onclick="toggleErmRow(${i})">`;
+    html += `<td>${row.dimension} <span style="color:var(--text-muted);font-size:0.7rem;">&#9660;</span></td>`;
+    html += `<td><span class="erm-rating ${row.openshift.rating.toLowerCase()}">${row.openshift.rating}</span></td>`;
+    html += `<td><span class="erm-rating ${row.rawK8s.rating.toLowerCase()}">${row.rawK8s.rating}</span></td>`;
+    html += `<td><span class="erm-rating ${row.cloud.rating.toLowerCase()}">${row.cloud.rating}</span></td>`;
+    html += '</tr>';
+    html += `<tr class="erm-expand-row"><td colspan="4"><div class="erm-expand-content ${expandedErmRow === i ? 'open' : ''}" id="erm-detail-${i}">`;
+    html += '<div class="erm-expand-grid">';
+    html += `<div class="erm-expand-col"><h5>OpenShift AI + llm-d</h5><p>${row.openshift.text}</p></div>`;
+    html += `<div class="erm-expand-col"><h5>Raw Kubernetes + vLLM</h5><p>${row.rawK8s.text}</p></div>`;
+    html += `<div class="erm-expand-col"><h5>Cloud Managed</h5><p>${row.cloud.text}</p></div>`;
+    html += '</div></div></td></tr>';
+  });
+
+  html += '</tbody></table></div>';
+  el.innerHTML = html;
+}
+
+function toggleErmRow(idx) {
+  expandedErmRow = expandedErmRow === idx ? null : idx;
+  renderReadinessMatrix();
+}
+
+
+/* =====================================================
+   DATA + RENDER: TCO Calculator
+   ===================================================== */
+let tcoState = {
+  gpuNodes: 8,
+  supportTier: 'standard',
+  complianceSOC2: false,
+  complianceHIPAA: false,
+  complianceFedRAMP: false,
+  compliancePCI: false,
+  deployModel: 'onprem'
+};
+
+function renderTCOCalculator() {
+  const el = document.getElementById('tcoCalculatorContainer');
+  let html = '<div class="tco-layout">';
+
+  // Inputs
+  html += '<div class="tco-inputs">';
+  html += '<h4 style="font-size:0.9rem;color:var(--text-primary);margin-bottom:16px;">Configuration</h4>';
+
+  html += `<div class="range-control"><label>GPU Nodes <span>${tcoState.gpuNodes}</span></label>
+    <input type="range" min="1" max="50" value="${tcoState.gpuNodes}" oninput="tcoState.gpuNodes=parseInt(this.value);renderTCOCalculator();"></div>`;
+
+  html += '<div class="select-wrap"><label>Support Tier</label><select onchange="tcoState.supportTier=this.value;renderTCOCalculator();">';
+  ['self-support', 'standard', 'premium'].forEach(t => {
+    const labels = { 'self-support': 'Self-Support', 'standard': 'Standard (24x7)', 'premium': 'Premium (TAM + 1hr Sev-1)' };
+    html += `<option value="${t}" ${tcoState.supportTier === t ? 'selected' : ''}>${labels[t]}</option>`;
+  });
+  html += '</select></div>';
+
+  html += '<label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:8px;">Compliance Requirements</label>';
+  html += '<div class="tco-checkbox-group">';
+  [['complianceSOC2','SOC 2 Type II'],['complianceHIPAA','HIPAA'],['complianceFedRAMP','FedRAMP'],['compliancePCI','PCI-DSS']].forEach(([key,label]) => {
+    html += `<label class="tco-checkbox-item"><input type="checkbox" ${tcoState[key] ? 'checked' : ''} onchange="tcoState.${key}=this.checked;renderTCOCalculator();"> ${label}</label>`;
+  });
+  html += '</div>';
+
+  html += '<label style="display:block;font-size:0.82rem;color:var(--text-secondary);margin-bottom:8px;">Deployment Model</label>';
+  ['onprem', 'cloud', 'hybrid'].forEach(m => {
+    const labels = { onprem: 'On-Premises', cloud: 'Cloud', hybrid: 'Hybrid' };
+    html += `<label class="tco-checkbox-item"><input type="radio" name="tcoDeployModel" value="${m}" ${tcoState.deployModel === m ? 'checked' : ''} onchange="tcoState.deployModel=this.value;renderTCOCalculator();" style="accent-color:var(--rh-red);width:16px;height:16px;cursor:pointer;"> ${labels[m]}</label>`;
+  });
+
+  html += '</div>';
+
+  // Output
+  html += '<div class="tco-output">';
+  html += renderTCOOutput();
+  html += '</div>';
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function renderTCOOutput() {
+  const s = tcoState;
+  const nodes = s.gpuNodes;
+  const gpusPerNode = 8;
+  const totalGPUs = nodes * gpusPerNode;
+  const complianceCount = [s.complianceSOC2, s.complianceHIPAA, s.complianceFedRAMP, s.compliancePCI].filter(Boolean).length;
+  const cloudMult = s.deployModel === 'cloud' ? 1.15 : (s.deployModel === 'hybrid' ? 1.08 : 1.0);
+
+  // DIY costs
+  const diyGPUYear = totalGPUs * 3.50 * 24 * 365 * 0.6 * cloudMult;
+  const diySREYear = Math.max(2, Math.ceil(nodes / 4)) * 180000;
+  const diySecYear = complianceCount * 75000 + 50000;
+  const diyIncidentYear = Math.ceil(nodes / 6) * 35000;
+  const diyInfraYear = nodes * 8000;
+  const diyYear1 = diyGPUYear + diySREYear + diySecYear + diyIncidentYear + diyInfraYear + 200000;
+  const diyYear2 = diyGPUYear + diySREYear + diySecYear * 0.7 + diyIncidentYear + diyInfraYear;
+  const diyYear3 = diyGPUYear + diySREYear + diySecYear * 0.5 + diyIncidentYear * 0.8 + diyInfraYear;
+
+  // OpenShift AI costs
+  const supportPricePerNode = { 'self-support': 3000, 'standard': 8000, 'premium': 15000 };
+  const rhSubYear = nodes * supportPricePerNode[s.supportTier];
+  const ocpSubYear = nodes * 5000;
+  const oshGPUYear = diyGPUYear;
+  const oshSREYear = Math.max(1, Math.ceil(nodes / 10)) * 180000;
+  const oshSecYear = complianceCount * 25000 + 15000;
+  const oshIncidentYear = Math.ceil(nodes / 12) * 15000;
+  const oshInfraYear = nodes * 6000;
+  const oshYear1 = oshGPUYear + rhSubYear + ocpSubYear + oshSREYear + oshSecYear + oshIncidentYear + oshInfraYear + 50000;
+  const oshYear2 = oshGPUYear + rhSubYear + ocpSubYear + oshSREYear + oshSecYear * 0.5 + oshIncidentYear + oshInfraYear;
+  const oshYear3 = oshGPUYear + rhSubYear + ocpSubYear + oshSREYear + oshSecYear * 0.3 + oshIncidentYear * 0.8 + oshInfraYear;
+
+  // Cloud API costs
+  const tokPerGPUPerYear = 1000 * 3600 * 24 * 365;
+  const totalTokYear = totalGPUs * tokPerGPUPerYear;
+  const apiPricePerMTok = 3.00;
+  const apiYear1 = (totalTokYear / 1000000) * apiPricePerMTok + 50000;
+  const apiYear2 = apiYear1 * 1.05;
+  const apiYear3 = apiYear2 * 1.05;
+
+  function fmt(n) { return '$' + Math.round(n).toLocaleString(); }
+
+  let html = '<h4 style="font-size:0.9rem;color:var(--text-primary);margin-bottom:16px;">3-Year Cost Comparison</h4>';
+
+  html += '<div class="tco-columns">';
+
+  // DIY Column
+  html += '<div class="tco-column">';
+  html += '<h4>Self-Managed (DIY)</h4>';
+  html += '<div class="tco-col-sub">Raw K8s + community vLLM</div>';
+  html += `<div class="tco-year-row"><span class="tco-year-label">Year 1</span><span class="tco-year-value">${fmt(diyYear1)}</span></div>`;
+  html += `<div class="tco-year-row"><span class="tco-year-label">Year 2</span><span class="tco-year-value">${fmt(diyYear2)}</span></div>`;
+  html += `<div class="tco-year-row"><span class="tco-year-label">Year 3</span><span class="tco-year-value">${fmt(diyYear3)}</span></div>`;
+  const diyTotal = diyYear1 + diyYear2 + diyYear3;
+  html += `<div class="tco-total-row"><span class="tco-total-label">3-Year Total</span><span class="tco-total-value">${fmt(diyTotal)}</span></div>`;
+  const diyMTokCost = (diyTotal / 3 / (totalTokYear / 1000000)).toFixed(2);
+  html += `<div style="margin-top:8px;font-size:0.75rem;color:var(--text-muted);">~$${diyMTokCost}/MTok</div>`;
+  html += '</div>';
+
+  // OpenShift AI Column
+  html += '<div class="tco-column" style="border-color:rgba(238,0,0,0.3);">';
+  html += '<h4 style="color:var(--rh-red);">OpenShift AI + llm-d</h4>';
+  html += '<div class="tco-col-sub">Red Hat subscriptions included</div>';
+  html += `<div class="tco-year-row"><span class="tco-year-label">Year 1</span><span class="tco-year-value">${fmt(oshYear1)}</span></div>`;
+  html += `<div class="tco-year-row"><span class="tco-year-label">Year 2</span><span class="tco-year-value">${fmt(oshYear2)}</span></div>`;
+  html += `<div class="tco-year-row"><span class="tco-year-label">Year 3</span><span class="tco-year-value">${fmt(oshYear3)}</span></div>`;
+  const oshTotal = oshYear1 + oshYear2 + oshYear3;
+  html += `<div class="tco-total-row"><span class="tco-total-label">3-Year Total</span><span class="tco-total-value">${fmt(oshTotal)}</span></div>`;
+  const oshMTokCost = (oshTotal / 3 / (totalTokYear / 1000000)).toFixed(2);
+  html += `<div style="margin-top:8px;font-size:0.75rem;color:var(--text-muted);">~$${oshMTokCost}/MTok</div>`;
+  html += '</div>';
+
+  // Cloud API Column
+  html += '<div class="tco-column">';
+  html += '<h4>Cloud LLM API</h4>';
+  html += '<div class="tco-col-sub">Per-token pricing (~$3/MTok)</div>';
+  html += `<div class="tco-year-row"><span class="tco-year-label">Year 1</span><span class="tco-year-value">${fmt(apiYear1)}</span></div>`;
+  html += `<div class="tco-year-row"><span class="tco-year-label">Year 2</span><span class="tco-year-value">${fmt(apiYear2)}</span></div>`;
+  html += `<div class="tco-year-row"><span class="tco-year-label">Year 3</span><span class="tco-year-value">${fmt(apiYear3)}</span></div>`;
+  const apiTotal = apiYear1 + apiYear2 + apiYear3;
+  html += `<div class="tco-total-row"><span class="tco-total-label">3-Year Total</span><span class="tco-total-value">${fmt(apiTotal)}</span></div>`;
+  html += `<div style="margin-top:8px;font-size:0.75rem;color:var(--text-muted);">~$${apiPricePerMTok.toFixed(2)}/MTok</div>`;
+  html += '</div>';
+
+  html += '</div>';
+
+  // Bar chart comparison
+  const maxCost = Math.max(diyTotal, oshTotal, apiTotal);
+
+  html += '<div class="cost-bar-chart">';
+  html += '<h4 style="font-size:0.9rem;color:var(--text-primary);margin:8px 0 16px;">3-Year Total Visual Comparison</h4>';
+
+  html += `<div class="cost-bar-row"><span class="cost-bar-label">DIY (Raw K8s)</span>
+    <div class="cost-bar-track"><div class="cost-bar-fill" style="width:${(diyTotal/maxCost*100).toFixed(1)}%;background:var(--amber);">${fmt(diyTotal)}</div></div></div>`;
+  html += `<div class="cost-bar-row"><span class="cost-bar-label">OpenShift AI</span>
+    <div class="cost-bar-track"><div class="cost-bar-fill" style="width:${(oshTotal/maxCost*100).toFixed(1)}%;background:var(--rh-red);">${fmt(oshTotal)}</div></div></div>`;
+  html += `<div class="cost-bar-row"><span class="cost-bar-label">Cloud LLM API</span>
+    <div class="cost-bar-track"><div class="cost-bar-fill" style="width:${(apiTotal/maxCost*100).toFixed(1)}%;background:var(--blue);">${fmt(apiTotal)}</div></div></div>`;
+  html += '</div>';
+
+  // Savings box
+  const savingsVsDIY = diyTotal - oshTotal;
+  const savingsVsAPI = apiTotal - oshTotal;
+  const sreSavings = (Math.max(2, Math.ceil(nodes / 4)) - Math.max(1, Math.ceil(nodes / 10))) * 180000 * 3;
+  const incidentSavings = (Math.ceil(nodes / 6) * 35000 - Math.ceil(nodes / 12) * 15000) * 3;
+
+  html += '<div class="tco-savings-box">';
+  html += '<h4>OpenShift AI Savings Highlights</h4>';
+  if (savingsVsDIY > 0) {
+    html += `<div class="tco-savings-item"><span class="label">vs. Self-Managed DIY (3yr)</span><span class="value">${fmt(savingsVsDIY)} saved</span></div>`;
+  }
+  if (savingsVsAPI > 0) {
+    html += `<div class="tco-savings-item"><span class="label">vs. Cloud LLM API (3yr)</span><span class="value">${fmt(savingsVsAPI)} saved</span></div>`;
+  }
+  html += `<div class="tco-savings-item"><span class="label">Reduced SRE Staffing (3yr)</span><span class="value">${fmt(sreSavings)} saved</span></div>`;
+  html += `<div class="tco-savings-item"><span class="label">Fewer Incidents (3yr)</span><span class="value">${fmt(incidentSavings)} saved</span></div>`;
+  html += `<div class="tco-savings-item"><span class="label">Cost per MTok (OpenShift AI)</span><span class="value">$${oshMTokCost}</span></div>`;
+  html += '</div>';
+
+  return html;
+}
+
+
+/* =====================================================
+   DATA + RENDER: Stack Explorer
+   ===================================================== */
+const stackLayers = [
+  {
+    num: 1, name: 'RHEL CoreOS', subtitle: 'Immutable OS foundation with FIPS crypto',
+    color: '#1a1a2e',
+    components: ['Kernel 5.14+', 'FIPS 140-3 crypto modules', 'NVIDIA/AMD GPU drivers', 'cgroup v2', 'SELinux enforcing', 'Immutable root filesystem'],
+    config: 'coreos-installer install /dev/sda\n  --ignition-url=https://api.cluster.example.com:22623/config/worker\n  --append-karg fips=1',
+    connectUp: 'CRI-O container runtime via systemd units',
+    connectDown: 'Bare metal or VM hypervisor (KVM, VMware, AWS Nitro)',
+    version: 'RHEL CoreOS 4.17',
+    certStatus: 'FIPS 140-3 validated'
+  },
+  {
+    num: 2, name: 'OpenShift Container Platform', subtitle: 'Enterprise Kubernetes with CRI-O runtime',
+    color: '#16213e',
+    components: ['CRI-O container runtime', 'kubelet', 'etcd cluster (3+ control plane)', 'API server', 'OpenShift Router (HAProxy)', 'Machine Config Operator'],
+    config: 'oc adm upgrade --to=4.17.12\noc get clusterversion\noc get nodes -o wide',
+    connectUp: 'OLM subscriptions for operator installation',
+    connectDown: 'systemd on RHEL CoreOS, kernel interfaces',
+    version: 'OCP 4.17.12',
+    certStatus: 'Common Criteria EAL2+'
+  },
+  {
+    num: 3, name: 'Red Hat AI Operator', subtitle: 'OLM-managed lifecycle for AI workloads',
+    color: '#1a1a3e',
+    components: ['Operator Lifecycle Manager (OLM)', 'Red Hat AI Operator v3.4', 'Model Registry', 'Dashboard integration', 'RBAC policy engine', 'Health monitoring'],
+    config: 'apiVersion: operators.coreos.com/v1alpha1\nkind: Subscription\nmetadata:\n  name: redhat-ai-operator\nspec:\n  channel: "stable-3.4"\n  source: redhat-operators',
+    connectUp: 'Creates KServe and LLMInferenceService resources',
+    connectDown: 'Subscribes via OLM on OCP API server',
+    version: 'v3.4 GA',
+    certStatus: 'Red Hat Certified Operator'
+  },
+  {
+    num: 4, name: 'KServe + LLMInferenceService CRD', subtitle: 'Declarative model serving framework',
+    color: '#1e2a4a',
+    components: ['KServe controller', 'LLMInferenceService CRD v1alpha1', 'InferencePool CRD', 'InferenceGateway CRD', 'Autoscaler integration', 'Canary rollout engine'],
+    config: 'apiVersion: inference.redhat.com/v1alpha1\nkind: LLMInferenceService\nmetadata:\n  name: llama-3-70b\nspec:\n  modelName: meta-llama/Llama-3.1-70B-Instruct\n  tensorParallelism: 4',
+    connectUp: 'Exposes inference endpoints via InferenceGateway',
+    connectDown: 'Created and reconciled by Red Hat AI Operator',
+    version: 'v1alpha1',
+    certStatus: 'GA in Red Hat AI 3.4'
+  },
+  {
+    num: 5, name: 'llm-d Routing (EPP)', subtitle: 'Intelligent per-request endpoint selection',
+    color: '#1e3350',
+    components: ['Endpoint Picker (EPP) v0.5.x', 'InferencePool controller', 'InferenceGateway controller', 'KV-cache affinity scorer', 'LoRA locality scorer', 'Prefix cache scorer'],
+    config: 'scoring:\n  kvCacheAffinity: 0.4\n  loraLocality: 0.25\n  prefixCache: 0.2\n  loadBalance: 0.15\nhealthCheck:\n  intervalMs: 500',
+    connectUp: 'Routes requests to vLLM pods in InferencePool',
+    connectDown: 'Managed by KServe/LLMInferenceService controller',
+    version: 'EPP v0.5.2',
+    certStatus: 'GA in Red Hat AI 3.4'
+  },
+  {
+    num: 6, name: 'vLLM Engine', subtitle: 'High-performance LLM inference runtime',
+    color: '#1e3a5a',
+    components: ['PagedAttention v2', 'CUDA Graphs', 'Continuous batching', 'Chunked prefill', 'FP8 quantization', 'Speculative decoding', 'Disaggregated prefill/decode'],
+    config: 'image: registry.redhat.io/redhat-ai/vllm-rhel9:0.8.4-12\nargs:\n  - "--model"\n  - meta-llama/Llama-3.1-70B-Instruct\n  - "--tensor-parallel-size"\n  - "4"\n  - "--enable-prefix-caching"',
+    connectUp: 'Receives routed requests from EPP via HTTP/gRPC',
+    connectDown: 'Dispatches CUDA kernels to GPU hardware',
+    version: 'vLLM v0.8.4',
+    certStatus: 'Red Hat certified container image'
+  },
+  {
+    num: 7, name: 'GPU Hardware', subtitle: 'Certified accelerator hardware',
+    color: '#1e4268',
+    components: ['NVIDIA H100 SXM (80GB HBM3)', 'NVIDIA H200 SXM (141GB HBM3e)', 'NVIDIA B200 (192GB HBM3e)', 'AMD MI300X (192GB HBM3)', 'NVLink 4.0 / NVSwitch', 'Infinity Fabric (AMD)'],
+    config: 'nvidia.com/gpu.product: NVIDIA-H100-80GB-HBM3\nnvidia.com/gpu.memory: 81920\nnvidia.com/gpu.count: 8\nnvidia.com/gpu.family: hopper',
+    connectUp: 'PCIe 5.0 / NVLink to vLLM CUDA runtime',
+    connectDown: 'Physical hardware layer (no lower software layer)',
+    version: 'Driver 550.127.05 / ROCm 6.2',
+    certStatus: 'Red Hat HW Certified'
+  }
+];
+
+let selectedStackLayer = null;
+
+function renderStackExplorer() {
+  const el = document.getElementById('stackExplorerContainer');
+  let html = '<div class="se-stack">';
+
+  stackLayers.forEach((layer, i) => {
+    const selected = selectedStackLayer === i ? 'se-selected' : '';
+    html += `<div class="se-layer ${selected}" style="background:${layer.color};" onclick="toggleStackLayer(${i})">`;
+    html += '<div class="se-layer-bar">';
+    html += `<span class="se-layer-num">L${layer.num}</span>`;
+    html += `<span class="se-layer-name">${layer.name}</span>`;
+    html += `<span class="se-layer-sub">${layer.subtitle}</span>`;
+    html += `<span class="badge badge-red" style="font-size:0.65rem;">${layer.version}</span>`;
+    html += '<span class="se-layer-chevron">&#9660;</span>';
+    html += '</div>';
+
+    html += '<div class="se-layer-detail">';
+    html += '<div class="se-detail-grid">';
+
+    html += '<div class="se-detail-section"><h5>Components</h5><ul>';
+    layer.components.forEach(c => { html += `<li>${c}</li>`; });
+    html += '</ul></div>';
+
+    html += `<div class="se-detail-section"><h5>Configuration</h5><div class="code-block" style="font-size:0.72rem;margin-top:4px;">${layer.config}</div></div>`;
+
+    html += '</div>';
+
+    html += '<div class="se-connection-info">';
+    html += `<span>UP: ${layer.connectUp}</span>`;
+    html += `<span>DOWN: ${layer.connectDown}</span>`;
+    html += '</div>';
+
+    html += `<div style="margin-top:12px;"><span class="badge badge-green" style="font-size:0.65rem;">${layer.certStatus}</span></div>`;
+
+    html += '</div>';
+    html += '</div>';
+  });
+
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function toggleStackLayer(idx) {
+  selectedStackLayer = selectedStackLayer === idx ? null : idx;
+  renderStackExplorer();
+}
+
+
+/* =====================================================
+   DATA + RENDER: CRD Deployment Flow
+   ===================================================== */
+const crdSteps = [
+  {
+    num: 1, title: 'kubectl apply', time: '< 1s',
+    desc: 'The LLMInferenceService CRD manifest is submitted to the Kubernetes API server. The API server validates the resource against the CRD schema, persists it to etcd, and returns a successful creation response. This triggers a watch event for the Red Hat AI operator controller.'
+  },
+  {
+    num: 2, title: 'Controller Reconcile', time: '1-3s',
+    desc: 'The Red Hat AI operator detects the new LLMInferenceService resource via its watch on the API server. The reconciliation loop validates the spec, checks for available GPU resources, resolves the model from the registry, and begins creating dependent resources (InferencePool, ConfigMaps, Secrets).'
+  },
+  {
+    num: 3, title: 'Create InferencePool', time: '2-5s',
+    desc: 'The operator creates an InferencePool resource that defines the logical grouping of vLLM pods. This pool includes the EPP configuration, scoring weights, health check parameters, and pod selector labels. The InferencePool controller begins reconciling its own dependent resources.'
+  },
+  {
+    num: 4, title: 'Schedule Pods on GPU Nodes', time: '5-30s',
+    desc: 'The Kubernetes scheduler identifies nodes with available GPU resources matching the nodeAffinity selectors. NUMA-aware scheduling places pods optimally across GPU topologies. The kubelet on each selected node pulls the vLLM container image from the Red Hat registry and starts the container.'
+  },
+  {
+    num: 5, title: 'Model Weight Loading', time: '30s-5min',
+    desc: 'vLLM loads model weights from the PersistentVolumeClaim (backed by NFS, Ceph, or S3-compatible storage) into GPU memory. For large models (70B+), tensor-parallel weight sharding distributes layers across multiple GPUs via NCCL. Loading time depends on model size, storage throughput, and GPU memory bandwidth.'
+  },
+  {
+    num: 6, title: 'Health Checks Pass', time: '10-30s',
+    desc: 'Kubernetes readiness probes (HTTP GET /health) begin polling the vLLM pods. Once the model is fully loaded and the inference engine is initialized, the readiness probe succeeds. The pod transitions to Ready status and is added to the Endpoints list for the Service.'
+  },
+  {
+    num: 7, title: 'EPP Registration', time: '1-3s',
+    desc: 'The Endpoint Picker detects new Ready pods via the Endpoints API watch. It begins collecting metrics from each pod (GPU utilization, KV-cache occupancy, queue depth, loaded LoRA adapters). The EPP initializes its scoring state and marks the pod as eligible for traffic routing.'
+  },
+  {
+    num: 8, title: 'Route Created', time: '2-5s',
+    desc: 'The InferenceGateway creates an OpenShift Route to expose the inference endpoint externally. TLS termination is configured (edge or passthrough), HAProxy reload is triggered, and the DNS record is propagated. The endpoint URL becomes resolvable at llm.apps.cluster.example.com.'
+  },
+  {
+    num: 9, title: 'Traffic Flowing', time: 'Continuous',
+    desc: 'The inference endpoint is now live and accepting requests. The EPP routes each incoming request to the optimal vLLM pod based on KV-cache affinity, LoRA locality, prefix cache hits, and current load. Prometheus metrics are being scraped, and the autoscaler monitors GPU utilization for scaling decisions.'
+  }
+];
+
+let crdAnimState = {
+  currentStep: -1,
+  playing: false,
+  speed: 1,
+  intervalId: null
+};
+
+function renderCRDFlow() {
+  const el = document.getElementById('crdFlowContainer');
+  const s = crdAnimState;
+  const progress = s.currentStep < 0 ? 0 : ((s.currentStep + 1) / crdSteps.length * 100);
+
+  let html = '';
+
+  // Controls
+  html += '<div class="crd-flow-controls">';
+  html += `<button class="btn btn-primary" onclick="playCRDFlow()">${s.playing ? 'Pause' : (s.currentStep >= crdSteps.length - 1 ? 'Replay' : 'Play')}</button>`;
+  html += `<button class="btn btn-secondary" onclick="resetCRDFlow()">Reset</button>`;
+  html += '<select onchange="setCRDSpeed(this.value)" style="background:var(--bg-code);border:1px solid var(--border-card);color:var(--text-primary);border-radius:var(--radius-xs);padding:6px 10px;font-family:\'Red Hat Text\',sans-serif;font-size:0.82rem;">';
+  html += `<option value="1" ${s.speed===1?'selected':''}>1x Speed</option>`;
+  html += `<option value="2" ${s.speed===2?'selected':''}>2x Speed</option>`;
+  html += `<option value="4" ${s.speed===4?'selected':''}>4x Speed</option>`;
+  html += '</select>';
+  html += `<span style="font-size:0.78rem;color:var(--text-muted);margin-left:auto;">Step ${Math.max(0,s.currentStep+1)} of ${crdSteps.length}</span>`;
+  html += '</div>';
+
+  // Progress bar
+  html += `<div class="crd-progress-bar"><div class="crd-progress-fill" style="width:${progress}%;"></div></div>`;
+
+  // Timeline
+  html += '<div class="crd-timeline">';
+  crdSteps.forEach((step, i) => {
+    let stepClass = '';
+    if (i < s.currentStep) stepClass = 'crd-completed';
+    else if (i === s.currentStep) stepClass = 'crd-active';
+
+    html += `<div class="crd-step ${stepClass}">`;
+    html += '<div class="crd-step-dot"></div>';
+    html += `<div class="crd-step-header" onclick="jumpToCRDStep(${i})">`;
+    html += `<span class="crd-step-num">${step.num}</span>`;
+    html += `<span class="crd-step-title">${step.title}</span>`;
+    html += `<span class="crd-step-time">${step.time}</span>`;
+    html += '</div>';
+    html += `<div class="crd-step-body">${step.desc}</div>`;
+    html += '</div>';
+  });
+  html += '</div>';
+
+  el.innerHTML = html;
+}
+
+function playCRDFlow() {
+  const s = crdAnimState;
+  if (s.playing) {
+    clearInterval(s.intervalId);
+    s.playing = false;
+    renderCRDFlow();
+    return;
+  }
+
+  if (s.currentStep >= crdSteps.length - 1) {
+    s.currentStep = -1;
+  }
+
+  s.playing = true;
+  const interval = 1500 / s.speed;
+  s.intervalId = setInterval(() => {
+    s.currentStep++;
+    if (s.currentStep >= crdSteps.length - 1) {
+      clearInterval(s.intervalId);
+      s.playing = false;
+    }
+    renderCRDFlow();
+  }, interval);
+
+  // Advance immediately on first click
+  s.currentStep++;
+  renderCRDFlow();
+}
+
+function resetCRDFlow() {
+  clearInterval(crdAnimState.intervalId);
+  crdAnimState.currentStep = -1;
+  crdAnimState.playing = false;
+  renderCRDFlow();
+}
+
+function setCRDSpeed(val) {
+  crdAnimState.speed = parseInt(val);
+  if (crdAnimState.playing) {
+    clearInterval(crdAnimState.intervalId);
+    crdAnimState.playing = false;
+    playCRDFlow();
+  }
+}
+
+function jumpToCRDStep(idx) {
+  if (crdAnimState.playing) {
+    clearInterval(crdAnimState.intervalId);
+    crdAnimState.playing = false;
+  }
+  crdAnimState.currentStep = idx;
+  renderCRDFlow();
+}
+
+
+/* =====================================================
+   DATA + RENDER: Certification Tracker
+   ===================================================== */
+const certData = [
+  {
+    name: 'SOC 2 Type II',
+    status: 'Available',
+    tier: 'Standard',
+    requirements: ['Annual audit by accredited firm', 'Continuous monitoring controls', 'Access control and encryption', 'Incident response procedures', 'Change management process'],
+    docRef: 'Red Hat Trust Center: SOC 2 Report'
+  },
+  {
+    name: 'HIPAA',
+    status: 'Available',
+    tier: 'Premium',
+    requirements: ['Business Associate Agreement (BAA)', 'PHI encryption at rest and in transit', 'Audit logging for all access', 'Minimum necessary access controls', 'Breach notification procedures'],
+    docRef: 'Red Hat HIPAA Compliance Guide'
+  },
+  {
+    name: 'FedRAMP High',
+    status: 'Available',
+    tier: 'Premium + Add-on',
+    requirements: ['FedRAMP High baseline (421 controls)', 'Continuous monitoring (ConMon)', 'Annual 3PAO assessment', 'FIPS 140-3 cryptographic modules', 'US-based support personnel'],
+    docRef: 'Red Hat FedRAMP Authorization Package'
+  },
+  {
+    name: 'FedRAMP Moderate',
+    status: 'Available',
+    tier: 'Premium',
+    requirements: ['FedRAMP Moderate baseline (325 controls)', 'Continuous monitoring (ConMon)', 'Annual 3PAO assessment', 'FIPS 140-2/3 cryptographic modules', 'Incident response within 1 hour'],
+    docRef: 'Red Hat FedRAMP Moderate Package'
+  },
+  {
+    name: 'PCI-DSS',
+    status: 'Available',
+    tier: 'Standard',
+    requirements: ['Network segmentation', 'Encryption of cardholder data', 'Access control and MFA', 'Regular vulnerability scanning', 'Penetration testing annually'],
+    docRef: 'OpenShift PCI-DSS Reference Architecture'
+  },
+  {
+    name: 'ISO 27001',
+    status: 'Available',
+    tier: 'Standard',
+    requirements: ['Information Security Management System (ISMS)', 'Risk assessment and treatment', 'Asset management controls', 'Supplier relationship security', 'Business continuity planning'],
+    docRef: 'Red Hat ISO 27001 Certificate'
+  },
+  {
+    name: 'FIPS 140-3',
+    status: 'Available',
+    tier: 'Standard',
+    requirements: ['NIST-validated cryptographic modules', 'FIPS mode enabled on RHEL CoreOS', 'TLS 1.2+ with FIPS-approved ciphers', 'Validated entropy sources', 'Key management procedures'],
+    docRef: 'RHEL FIPS 140-3 Validation Certificate'
+  },
+  {
+    name: 'Common Criteria',
+    status: 'In Progress',
+    tier: 'Premium',
+    requirements: ['EAL2+ evaluation', 'Security Target documentation', 'Independent testing lab evaluation', 'Vulnerability analysis', 'Configuration management evidence'],
+    docRef: 'Common Criteria evaluation in progress (ETA Q4 2026)'
+  },
+  {
+    name: 'DISA STIG',
+    status: 'Available',
+    tier: 'Premium',
+    requirements: ['STIG compliance for OpenShift', 'Automated SCAP scanning', 'Remediation playbooks', 'CAT I/II/III finding resolution', 'ATO package documentation support'],
+    docRef: 'OpenShift DISA STIG Benchmark v1r3'
+  },
+  {
+    name: 'StateRAMP',
+    status: 'Planned',
+    tier: 'Premium + Add-on',
+    requirements: ['StateRAMP Moderate baseline', 'Continuous monitoring', '3PAO assessment', 'State-specific data residency', 'Annual recertification'],
+    docRef: 'StateRAMP authorization planned for 2027'
+  }
+];
+
+let certFilterStatus = 'all';
+let certFilterTier = 'all';
+let expandedCerts = {};
+
+function renderCertTracker() {
+  const el = document.getElementById('certTrackerContainer');
+
+  // Filters
+  let html = '<div class="cert-filters">';
+  html += '<span style="font-size:0.78rem;color:var(--text-muted);margin-right:4px;">Status:</span>';
+  ['all', 'Available', 'In Progress', 'Planned'].forEach(s => {
+    html += `<button class="tab-pill ${certFilterStatus === s ? 'active' : ''}" onclick="setCertFilter('status','${s}')">${s === 'all' ? 'All' : s}</button>`;
+  });
+  html += '<span style="font-size:0.78rem;color:var(--text-muted);margin-left:12px;margin-right:4px;">Tier:</span>';
+  ['all', 'Standard', 'Premium', 'Premium + Add-on'].forEach(t => {
+    html += `<button class="tab-pill ${certFilterTier === t ? 'active' : ''}" onclick="setCertFilter('tier','${t}')">${t === 'all' ? 'All' : t}</button>`;
+  });
+  html += '</div>';
+
+  // Filter data
+  let filtered = certData.filter(c => {
+    if (certFilterStatus !== 'all' && c.status !== certFilterStatus) return false;
+    if (certFilterTier !== 'all' && c.tier !== certFilterTier) return false;
+    return true;
+  });
+
+  // Cards
+  html += '<div class="cert-grid">';
+  filtered.forEach((cert, i) => {
+    const expanded = expandedCerts[cert.name] ? 'cert-expanded' : '';
+    const statusClass = cert.status.toLowerCase().replace(/ /g, '-');
+
+    html += `<div class="cert-card ${expanded}" onclick="toggleCertCard('${cert.name}')">`;
+    html += '<div class="cert-card-header">';
+    html += `<span class="cert-card-name">${cert.name}</span>`;
+    html += `<span class="cert-status-badge ${statusClass}">${cert.status}</span>`;
+    html += '<span class="cert-card-chevron">&#9660;</span>';
+    html += '</div>';
+
+    html += '<div class="cert-card-meta">';
+    html += `<span>Tier: ${cert.tier}</span>`;
+    html += '</div>';
+
+    html += '<div class="cert-card-detail">';
+    html += '<h5 style="font-size:0.78rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-top:12px;margin-bottom:4px;">Key Requirements</h5>';
+    html += '<ul>';
+    cert.requirements.forEach(r => { html += `<li>${r}</li>`; });
+    html += '</ul>';
+    html += `<span class="cert-doc-link">${cert.docRef}</span>`;
+    html += '</div>';
+
+    html += '</div>';
+  });
+  html += '</div>';
+
+  if (filtered.length === 0) {
+    html += '<p style="color:var(--text-muted);text-align:center;padding:32px;">No certifications match the selected filters.</p>';
+  }
+
+  el.innerHTML = html;
+}
+
+function setCertFilter(type, val) {
+  if (type === 'status') certFilterStatus = val;
+  else certFilterTier = val;
+  renderCertTracker();
+}
+
+function toggleCertCard(name) {
+  expandedCerts[name] = !expandedCerts[name];
+  renderCertTracker();
+}
+
+
+/* =====================================================
    UTILITY: Copy YAML
    ===================================================== */
 function copyYaml(btn) {
@@ -3500,6 +4920,11 @@ document.addEventListener('DOMContentLoaded', () => {
   renderCostInputs();
   renderCostOutput();
   renderDecisionQuestions();
+  renderReadinessMatrix();
+  renderTCOCalculator();
+  renderStackExplorer();
+  renderCRDFlow();
+  renderCertTracker();
   setupIntersectionObserver();
 });
 </script>
